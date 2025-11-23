@@ -642,11 +642,24 @@ document.addEventListener('DOMContentLoaded', function() {
     return;
   }
   
-  // Buy button
-  if (tgt.closest('.icon-buy')) {
-    buyOrRead?.(p);
-    return;
+  // ✅ CHANGÉ: Cart button au lieu de Buy
+var cartBtn = e.target.closest('.icon-cart');
+if (cartBtn) {
+  e.preventDefault();
+  e.stopPropagation();
+  
+  // Ajouter au panier via CartAPI
+  if (typeof window.CartAPI !== 'undefined' && window.CartAPI.add) {
+    window.CartAPI.add(p);
+    
+    // Feedback visuel
+    cartBtn.style.animation = 'quickAddPulse 0.4s ease';
+    setTimeout(function() { cartBtn.style.animation = ''; }, 400);
+  } else {
+    alert('❌ Erreur: Cart API non disponible');
   }
+  return;
+}
   
   // Read/Preview button
   if (tgt.closest('[data-action="read"]') || tgt.closest('.icon-read')) {
@@ -5214,10 +5227,9 @@ function renderProducts(filter, search) {
       '<i class="fa-solid fa-circle-play"></i></button>';
   }
   
-  // Buy/Get button
-  html += '<button type="button" class="icon-btn icon-buy" title="' +
-    (isFree ? 'Obtenir (WhatsApp)' : 'Acheter (WhatsApp)') + '">' +
-    '<i class="fa-brands fa-whatsapp"></i></button>';
+  // ✅ CHANGÉ: Bouton Panier au lieu de WhatsApp
+  html += '<button type="button" class="icon-btn icon-cart" title="Ajouter au panier">' +
+    '<i class="fa-solid fa-cart-plus"></i></button>';
   
   // Owner tools
   html += '<button type="button" class="icon-btn owner-tool" data-tool="edit" title="Edit">' +
@@ -9468,16 +9480,24 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     
-    // ✅ Buy button
-    var buyBtn = e.target.closest('.icon-buy');
-    if (buyBtn) {
-      e.preventDefault();
-      e.stopPropagation();
-      if (typeof buyOrRead === 'function') {
-        buyOrRead(p);
-      }
-      return;
-    }
+ // ✅ CHANGÉ: Cart button au lieu de Buy
+var cartBtn = e.target.closest('.icon-cart');
+if (cartBtn) {
+  e.preventDefault();
+  e.stopPropagation();
+  
+  // Ajouter au panier via CartAPI
+  if (typeof window.CartAPI !== 'undefined' && window.CartAPI.add) {
+    window.CartAPI.add(p);
+    
+    // Feedback visuel
+    cartBtn.style.animation = 'quickAddPulse 0.4s ease';
+    setTimeout(function() { cartBtn.style.animation = ''; }, 400);
+  } else {
+    alert('❌ Erreur: Cart API non disponible');
+  }
+  return;
+}
     
     // ✅ Read/Preview button
     var readBtn = e.target.closest('.icon-read');
