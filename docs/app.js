@@ -7703,115 +7703,202 @@ if (!document.getElementById('qo-premium-styles')) {
     // ========================================
     
     async function saveQOProducts() {
-      try {
-        console.log('[QO] Saving', qoProducts.length, 'products...');
+  try {
+    console.log('[QO] 💾 ===== SAVE START =====');
+    console.log('[QO] Products to save:', qoProducts.length);
+    
+    const sb = await ensureSupabase();
+    
+    // ✅ STEP 1: DELETE ALL
+    console.log('[QO] 🗑️ Deleting all existing products...');
+    const { error: deleteError } = await sb
+      .from('quick_order_products')
+      .delete()
+      .gt('position', -1);
+    
+    if (deleteError) {
+      console.error('[QO] ❌ Delete error:', deleteError);
+      throw deleteError;
+    }
+    
+    console.log('[QO] ✅ All existing products deleted');
+    
+    // ✅ STEP 2: VALIDATE + FILTER INVALID IDs
+    if (qoProducts.length > 0) {
+      console.log('[QO] 📤 Preparing', qoProducts.length, 'products...');
+      
+      // 🔥 NOUVEAU: Filtrer les IDs invalides
+      const validProducts = qoProducts.filter(p => {
+        // Vérifier que l'ID est valide
+        const isValid = p.id &&
+          typeof p.id === 'string' &&
+          p.id.trim() !== '' &&
+          p.id !== '0' &&
+          p.id !== 'undefined' &&
+          p.id !== 'null' &&
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(p.id); // Vérifier format UUID
         
-        // ✅ Vérifier authentification
-        if (!window.MijoroAuth || !window.MijoroAuth.isAuthenticated) {
-          console.warn('[QO] Not authenticated, saving to localStorage only');
-          localStorage.setItem(QO_STORAGE_KEY, JSON.stringify(qoProducts));
-          updateCounter();
-          return;
+        if (!isValid) {
+          console.warn('[QO] ⚠️ Invalid product ID:', p.id, '- Skipping');
         }
         
-        const ownerId = window.MijoroAuth.userAccount.id;
-        const sb = await ensureSupabase();
-        
-        // ✅ Delete existing QO for THIS owner
-        await sb
-          .from('quick_order_products')
-          .delete()
-          .eq('owner_id', ownerId); // ← FILTRE CRITIQUE
-        
-        // Insert new products with owner_id
-        if (qoProducts.length > 0) {
-          const rows = qoProducts.map((p, index) => ({
-            product_id: p.id,
-            position: index,
-            owner_id: ownerId, // ← AJOUT CRITIQUE
-            added_at: p.addedAt ? new Date(p.addedAt).toISOString() : new Date().toISOString()
-          }));
-          
-          const { error } = await sb
-            .from('quick_order_products')
-            .insert(rows);
-          
-          if (error) throw error;
-          
-          console.log('[QO] ✓ Saved to Supabase:', qoProducts.length, 'products');
-        }
-        
-        // Fallback localStorage
+        return isValid;
+      });
+      
+      console.log('[QO] ✅ Valid products:', validProducts.length, '/', qoProducts.length);
+      
+      if (validProducts.length === 0) {
+        console.warn('[QO] ⚠️ No valid products to save');
+        qoProducts = [];
         try {
-          localStorage.setItem(QO_STORAGE_KEY, JSON.stringify(qoProducts));
-        } catch (_) {}
-        
+          localStorage.setItem(QO_STORAGE_KEY, JSON.stringify([]));
+        } catch (e) {}
         updateCounter();
-        
+        return;
+      }
+      
+      // ✅ Map valid products
+      const rows = validProducts.map((p, index) => ({
+        product_id: p.id,
+        position: index,
+        added_at: p.addedAt ? new Date(p.addedAt).toISOString() : new Date().toISOString()
+      }));
+      
+      console.log('[QO] 📤 Inserting', rows.length, 'rows...');
+      
+      // ✅ INSERT
+      const { data: insertedData, error: insertError } = await sb
+        .from('quick_order_products')
+        .insert(rows)
+        .select();
+      
+      if (insertError) {
+        console.error('[QO] ❌ Insert error:', insertError);
+        throw insertError;
+      }
+      
+      console.log('[QO] ✅ Inserted:', insertedData?.length || 0, 'rows');
+      
+      // ✅ Update qoProducts to keep only valid
+      qoProducts = validProducts;
+      
+    } else {
+      console.log('[QO] ℹ️ No products to insert (empty QO)');
+    }
+    
+    // ✅ STEP 3: Save to localStorage
+    try {
+      localStorage.setItem(QO_STORAGE_KEY, JSON.stringify(qoProducts));
+      console.log('[QO] ✅ Saved to localStorage');
+    } catch (e) {
+      console.warn('[QO] ⚠️ LocalStorage error:', e);
+    }
+    
+    updateCounter();
+    console.log('[QO] 💾 ===== SAVE COMPLETE =====');
+    
+  } catch (e) {
+    console.error('[QO] 💥 ===== SAVE FAILED =====');
+    console.error('[QO] Error:', e);
+    
+    // Fallback localStorage
+    try {
+      localStorage.setItem(QO_STORAGE_KEY, JSON.stringify(qoProducts));
+      updateCounter();
+    } catch (e2) {}
+    
+    throw new Error('Erreur sauvegarde: ' + e.message);
+  }
+}
+    
+    async function loadQOProducts() {
+  try {
+    console.log('[QO] 🔄 ===== LOAD START =====');
+    
+    const sb = await ensureSupabase();
+    
+    const { data, error } = await sb
+      .from('quick_order_products')
+      .select('*')
+      .order('position');
+    
+    if (error) throw error;
+    
+    if (data && data.length > 0) {
+      const allProducts = window.products || [];
+      
+      // 🔥 NOUVEAU: Filter + validate UUIDs
+      qoProducts = data
+        .filter(qo => {
+          const isValidId = qo.product_id &&
+            typeof qo.product_id === 'string' &&
+            qo.product_id.trim() !== '' &&
+            qo.product_id !== '0' &&
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(qo.product_id);
+          
+          if (!isValidId) {
+            console.warn('[QO] ⚠️ Invalid UUID in DB:', qo.product_id);
+          }
+          
+          return isValidId;
+        })
+        .map(qo => {
+          const product = allProducts.find(p => p.id === qo.product_id);
+          
+          if (!product) {
+            console.warn('[QO] ⚠️ Product not found:', qo.product_id);
+            return null;
+          }
+          
+          return {
+            id: product.id,
+            title: product.title,
+            price: product.price,
+            image: product.image?.url || product.thumbnail_url,
+            category: product.category,
+            addedAt: new Date(qo.added_at).getTime()
+          };
+        })
+        .filter(Boolean);
+      
+      console.log('[QO] ✅ Loaded', qoProducts.length, 'valid products');
+      
+    } else {
+      // Fallback localStorage
+      try {
+        const raw = localStorage.getItem(QO_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          qoProducts = parsed.filter(p => {
+            const isValid = p.id &&
+              typeof p.id === 'string' &&
+              p.id !== '0' &&
+              /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(p.id);
+            
+            if (!isValid) {
+              console.warn('[QO] ⚠️ Invalid ID in localStorage:', p.id);
+            }
+            
+            return isValid;
+          });
+        } else {
+          qoProducts = [];
+        }
       } catch (e) {
-        console.error('[QO] Save error:', e);
-        // Fallback localStorage
-        try {
-          localStorage.setItem(QO_STORAGE_KEY, JSON.stringify(qoProducts));
-          updateCounter();
-        } catch (_) {}
+        qoProducts = [];
       }
     }
     
-    async function loadQOProducts() {
-      try {
-        // ✅ Vérifier authentification
-        if (!window.MijoroAuth || !window.MijoroAuth.isAuthenticated) {
-          console.warn('[QO] Not authenticated, loading from localStorage only');
-          const raw = localStorage.getItem(QO_STORAGE_KEY);
-          if (raw) {
-            qoProducts = JSON.parse(raw);
-          }
-          updateCounter();
-          return;
-        }
-        
-        const ownerId = window.MijoroAuth.userAccount.id;
-        const sb = await ensureSupabase();
-        
-        // ✅ Load QO for THIS owner only
-        const { data, error } = await sb
-          .from('quick_order_products')
-          .select('*')
-          .eq('owner_id', ownerId) // ← FILTRE CRITIQUE
-          .order('position');
-        
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          const allProducts = window.products || [];
-          qoProducts = data.map(qo => {
-            const product = allProducts.find(p => p.id === qo.product_id);
-            return product ? {
-              id: product.id,
-              title: product.title,
-              price: product.price,
-              image: product.image?.url || product.thumbnail_url,
-              category: product.category,
-              addedAt: new Date(qo.added_at).getTime()
-            } : null;
-          }).filter(Boolean);
-          
-          console.log('[QO] ✓ Loaded', qoProducts.length, 'products from Supabase');
-        }
-      } catch (e) {
-        console.error('[QO] Load error:', e);
-        // Fallback localStorage
-        try {
-          const raw = localStorage.getItem(QO_STORAGE_KEY);
-          if (raw) {
-            qoProducts = JSON.parse(raw);
-          }
-        } catch (_) {}
-      }
-      
-      updateCounter();
-    }
+    updateCounter();
+    console.log('[QO] 🔄 ===== LOAD COMPLETE =====');
+    
+  } catch (e) {
+    console.error('[QO] 💥 ===== LOAD FAILED =====');
+    qoProducts = [];
+  }
+  
+  updateCounter();
+}
     
     function updateCounter() {
       const counter = document.getElementById('qoCounter');
@@ -7933,44 +8020,76 @@ if (!document.getElementById('qo-premium-styles')) {
   // MODAL ADD - SAVE
   // ========================================
   
-  function saveSelectedProducts() {
+ async function saveSelectedProducts() {
   if (selectedProducts.size === 0) {
     alert('Veuillez sélectionner au moins un produit');
     return;
   }
   
   const allProducts = window.products || [];
+  let addedCount = 0;
+  let skippedCount = 0;
   
   selectedProducts.forEach(id => {
+    // ✅ VALIDATE ID
+    if (!id || typeof id !== 'string' || id.trim() === '' || id === '0') {
+      console.warn('[QO] ⚠️ Invalid product ID:', id);
+      skippedCount++;
+      return;
+    }
+    
     const product = allProducts.find(p => p.id === id);
-    if (product && !qoProducts.find(p => p.id === id)) {
+    
+    if (!product) {
+      console.warn('[QO] ⚠️ Product not found:', id);
+      skippedCount++;
+      return;
+    }
+    
+    if (!qoProducts.find(p => p.id === id)) {
       qoProducts.push({
-        id: product.id,
+        id: product.id, // ← UUID marina
         title: product.title,
         price: product.price,
         image: product.image?.url || product.thumbnail_url,
         category: product.category,
-        addedAt: Date.now() // ✅ NOUVEAU: Timestamp
+        addedAt: Date.now()
       });
+      addedCount++;
     }
   });
-    
-    saveQOProducts();
-closeAddModal();
-
-// Re-render QO
-if (typeof QuickOrder !== 'undefined' && QuickOrder.render) {
-  QuickOrder.render();
-}
-
-// ✅ NOUVEAU: Check if full
-const isFull = qoProducts.length >= 8;
-if (isFull) {
-  alert(`✅ ${selectedProducts.size} produit(s) ajouté(s)\n\n⚠️ Quick Order est complet (8/8)`);
-} else {
-  alert(`✅ ${selectedProducts.size} produit(s) ajouté(s)`);
-}}
   
+  if (addedCount === 0) {
+    alert('⚠️ Aucun produit valide à ajouter');
+    return;
+  }
+  
+  // ✅ SAVE
+  try {
+    await saveQOProducts();
+    closeAddModal();
+    
+    // Re-render
+    if (typeof QuickOrder !== 'undefined' && QuickOrder.render) {
+      await QuickOrder.render();
+    }
+    
+    // Success message
+    let msg = `✅ ${addedCount} produit(s) ajouté(s)`;
+    if (skippedCount > 0) {
+      msg += `\n⚠️ ${skippedCount} produit(s) ignoré(s) (invalides)`;
+    }
+    if (qoProducts.length >= 8) {
+      msg += '\n\n⚠️ Quick Order est complet (8/8)';
+    }
+    
+    alert(msg);
+    
+  } catch (e) {
+    console.error('[QO] Save failed:', e);
+    alert('❌ ' + e.message);
+  }
+}
   // ========================================
   // MODAL MANAGE - OPEN/CLOSE
   // ========================================
@@ -8045,13 +8164,24 @@ if (isFull) {
   }
   
   function wireManageEvents(container) {
-    // Delete buttons
-    container.querySelectorAll('.qo-manage-delete').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const index = parseInt(this.dataset.index);
-        deleteQOProduct(index);
-      });
+  // ✅ Delete buttons - ASYNC HANDLER
+  container.querySelectorAll('.qo-manage-delete').forEach(btn => {
+    // Remove old listeners
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+    
+    // Add async handler
+    newBtn.addEventListener('click', async function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const index = parseInt(this.dataset.index);
+      console.log('[QO] Delete button clicked, index:', index);
+      
+      // ✅ CRITICAL: AWAIT delete
+      await deleteQOProduct(index);
     });
+  });
     
     // Drag & drop
     const items = container.querySelectorAll('.qo-manage-item');
@@ -8077,23 +8207,30 @@ if (isFull) {
   }
   
   function handleDrop(e) {
-    e.preventDefault();
-    const dropIndex = parseInt(this.dataset.index);
+  e.preventDefault();
+  const dropIndex = parseInt(this.dataset.index);
+  
+  if (draggedIndex !== null && draggedIndex !== dropIndex) {
+    console.log('[QO] Drag & Drop:', draggedIndex, '→', dropIndex);
     
-    if (draggedIndex !== null && draggedIndex !== dropIndex) {
-      // Reorder
-      const [removed] = qoProducts.splice(draggedIndex, 1);
-      qoProducts.splice(dropIndex, 0, removed);
-      
-      saveQOProducts();
+    // Reorder
+    const [removed] = qoProducts.splice(draggedIndex, 1);
+    qoProducts.splice(dropIndex, 0, removed);
+    
+    // ✅ AWAIT save (raha async eto)
+    saveQOProducts().then(() => {
       renderManageList();
       
       // Re-render QO
       if (typeof QuickOrder !== 'undefined' && QuickOrder.render) {
         QuickOrder.render();
       }
-    }
+    }).catch(err => {
+      console.error('[QO] Save after drag failed:', err);
+      alert('❌ Erreur sauvegarde');
+    });
   }
+}
   
   function handleDragEnd() {
     this.classList.remove('dragging');
@@ -8104,41 +8241,60 @@ if (isFull) {
   // DELETE PRODUCT
   // ========================================
   
-  function deleteQOProduct(index) {
-    if (!confirm('Supprimer ce produit du Quick Order?')) return;
-    
-    qoProducts.splice(index, 1);
-    saveQOProducts();
-    renderManageList();
-    
-    // Re-render QO
-    if (typeof QuickOrder !== 'undefined' && QuickOrder.render) {
-      QuickOrder.render();
-    }
-    
-    console.log('[QO] Product deleted, remaining:', qoProducts.length);
+  async function deleteQOProduct(index) {
+  if (!confirm('Supprimer ce produit du Quick Order?')) return;
+  
+  console.log('[QO] 🗑️ Deleting product at index:', index);
+  console.log('[QO] Before delete:', qoProducts.length, 'products');
+  
+  // ✅ STEP 1: Delete from array
+  qoProducts.splice(index, 1);
+  
+  console.log('[QO] After delete:', qoProducts.length, 'products');
+  
+  // ✅ STEP 2: FORCE SAVE to Supabase + localStorage
+  try {
+    await saveQOProducts();
+    console.log('[QO] ✅ Delete saved successfully');
+  } catch (e) {
+    console.error('[QO] ❌ Save failed:', e);
+    alert('❌ Erreur sauvegarde: ' + e.message);
+    return; // Stop ici si save échoue
   }
+  
+  // ✅ STEP 3: Update UI
+  renderManageList();
+  
+  // ✅ STEP 4: Re-render Quick Order section
+  if (typeof QuickOrder !== 'undefined' && QuickOrder.render) {
+    await QuickOrder.render();
+  }
+  
+  console.log('[QO] 🎉 Delete complete, remaining:', qoProducts.length);
+}
   
   // ========================================
   // CLEAR ALL
   // ========================================
   
-  function clearAllQO() {
-    if (!confirm('⚠️ Supprimer TOUS les produits du Quick Order?\n\nCette action est irréversible.')) {
-      return;
-    }
-    
-    qoProducts = [];
-    saveQOProducts();
-    renderManageList();
-    
-    // Re-render QO
-    if (typeof QuickOrder !== 'undefined' && QuickOrder.render) {
-      QuickOrder.render();
-    }
-    
-    alert('✅ Quick Order vidé');
+  async function clearAllQO() {
+  if (!confirm('⚠️ Supprimer TOUS les produits du Quick Order?\n\nCette action est irréversible.')) {
+    return;
   }
+  
+  qoProducts = [];
+  
+  // ✅ AWAIT save
+  await saveQOProducts();
+  renderManageList();
+  
+  // ✅ Re-render QO
+  if (typeof QuickOrder !== 'undefined' && QuickOrder.render) {
+    await QuickOrder.render();
+  }
+  
+  alert('✅ Quick Order vidé');
+}
   
   // ========================================
   // PATCH QUICKORDER MODULE
@@ -8153,11 +8309,13 @@ if (isFull) {
     
     const originalRender = QuickOrder.render;
     
-    QuickOrder.render = function() {
+    QuickOrder.render = async function() {
       const container = document.getElementById('featured-products');
       if (!container) return;
       
-      loadQOProducts();
+      if (qoProducts.length === 0 && typeof loadQOProducts === 'function') {
+        await loadQOProducts(); // ← OK IZAO
+      }
       
       if (qoProducts.length === 0) {
         // Use original render (featured products)
@@ -8343,7 +8501,11 @@ function handleImportFile(e) {
     
     if (manageModalClose) manageModalClose.addEventListener('click', closeManageModal);
     if (manageCancelBtn) manageCancelBtn.addEventListener('click', closeManageModal);
-    if (clearAllBtn) clearAllBtn.addEventListener('click', clearAllQO);
+    if (clearAllBtn) {
+  clearAllBtn.addEventListener('click', async function() {
+    await clearAllQO();
+  });
+}
     
     // Search in add modal
     const searchInput = document.getElementById('qoSearchProducts');
@@ -8438,23 +8600,30 @@ window.QOManagement = {
   // INIT
   // ========================================
   
-  function init() {
-    console.log('[QO Management] 🚀 Initializing...');
-    
-    loadQOProducts();
-    updateCounter(); // ✅ NOUVEAU
-    wireButtons();
-    patchQuickOrderRender();
-    
-    console.log('[QO Management] ✅ Initialized with', qoProducts.length, 'products');
-  }
+async function init() {
+  console.log('[QO Management] 🚀 Initializing...');
   
-  // Auto-init
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  await loadQOProducts(); // ✅ Await eto
+  updateCounter();
+  wireButtons();
+  patchQuickOrderRender();
+  
+  console.log('[QO Management] ✅ Initialized with', qoProducts.length, 'products');
+}
+
+// ✅ VAOVAO: Wrapper function ho an'ny auto-init
+function autoInit() {
+  init().catch(err => {
+    console.error('[QO Management] Init error:', err);
+  });
+}
+
+// Auto-init
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', autoInit); // ✅ Ovaina eto
+} else {
+  autoInit(); // ✅ Ovaina eto
+}
   
   })();
 /* ==========================================
@@ -11366,19 +11535,22 @@ if (!document.getElementById('gallery-indicator-styles')) {
   // ========================================
   
   async function handleLogout() {
-    if (!confirm('Voulez-vous vraiment vous déconnecter?')) {
-      return;
-    }
+  if (!confirm('Voulez-vous vraiment vous déconnecter?')) {
+    return;
+  }
+  
+  try {
+    console.log('[Auth] 🚪 Logging out...');
     
-    try {
-      console.log('[Auth] 🚪 Logging out...');
+    const sb = await window.ensureSupabase();
+    
+    // ✅ FIX 1: Vérifier si une session existe avant de déconnecter
+    const { data: { session } } = await sb.auth.getSession();
+    
+    if (!session) {
+      console.warn('[Auth] ⚠️ No active session found');
       
-      const sb = await window.ensureSupabase();
-      const { error } = await sb.auth.signOut();
-      
-      if (error) throw error;
-      
-      // Clear state
+      // Clear state anyway
       authState.user = null;
       authState.session = null;
       authState.isOwner = false;
@@ -11386,16 +11558,59 @@ if (!document.getElementById('gallery-indicator-styles')) {
       // Update UI
       updateAuthUI();
       
-      // Show toast
-      showToast('👋 Déconnecté', 'info');
-      
-      console.log('[Auth] ✅ Logout successful');
-      
-    } catch (err) {
-      console.error('[Auth] ❌ Logout error:', err);
-      showToast('❌ Erreur de déconnexion', 'error');
+      showToast('👋 Déjà déconnecté', 'info');
+      return;
     }
+    
+    console.log('[Auth] 🔓 Active session found, signing out...');
+    
+    // ✅ FIX 2: Utiliser signOut avec scope 'local' pour éviter l'erreur réseau
+    const { error } = await sb.auth.signOut({ scope: 'local' });
+    
+    if (error) {
+      console.error('[Auth] ⚠️ Logout error (non-critical):', error);
+      // Ne pas throw, continuer quand même
+    }
+    
+    // ✅ FIX 3: Clear local state TOUJOURS
+    authState.user = null;
+    authState.session = null;
+    authState.isOwner = false;
+    
+    // Clear localStorage auth data
+    try {
+      localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('mijoro-auth-v1');
+    } catch (e) {
+      console.warn('[Auth] LocalStorage clear error:', e);
+    }
+    
+    // Update UI
+    updateAuthUI();
+    
+    // Show toast
+    showToast('👋 Déconnexion réussie', 'success');
+    
+    console.log('[Auth] ✅ Logout complete');
+    
+  } catch (err) {
+    console.error('[Auth] ❌ Logout error:', err);
+    
+    // ✅ FIX 4: Forcer la déconnexion côté client même si erreur serveur
+    authState.user = null;
+    authState.session = null;
+    authState.isOwner = false;
+    
+    try {
+      localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('mijoro-auth-v1');
+    } catch (e) {}
+    
+    updateAuthUI();
+    
+    showToast('👋 Déconnecté (mode local)', 'info');
   }
+}
   
   // ========================================
   // MODAL OPEN/CLOSE
@@ -11663,8 +11878,7 @@ if (!document.getElementById('auth-toast-styles')) {
     }
   `;
   document.head.appendChild(styles);
-}
-// ==========================================
+}// ==========================================
 // MIORA AI ASSISTANT - VERSION 2.1 FIXED
 // Mijoro Boutique Integration
 // ==========================================
@@ -13627,7 +13841,7 @@ function toggleVoiceRecognition() {
 - "Inona no Mijoro Boutique?" → Boutique officielle vente digital + physique, tsara indrindra @ Madagascar
 
 **2️⃣ Founder & Histoire:**
-- "Iza no namorona Mijoro Boutique?" → **ANDRIAMANIRISOA** no namorona
+- "Iza no namorona Mijoro Boutique?" → **ANDRIAMIADANARISON Miora** no namorona
 - "Nahoana no antsoina hoe Mijoro?" → Tsy voahofana amin'io fanontaniana io aho, tsara kokoa manontany an'i Miora @ WhatsApp: 0333106055
 
 **3️⃣ Asa sy Fampiofanana:**
@@ -13666,7 +13880,7 @@ function toggleVoiceRecognition() {
 ⚠️ **TSY HADINO:**
 - WhatsApp = 0333106055 (IMPORTANTE!)
 - Panier = ambany ankavanana (🛒)
-- Founder =ANDRIAMANIRISOA
+- Founder = ANDRIAMIADANARISON Miora
 - BALANCE: Conversation vs Search
 
 Valio amin'ny **Malagasy**.`,
