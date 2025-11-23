@@ -1062,49 +1062,77 @@
 </div>
 <!-- ✅ PWA REGISTRATION SCRIPT -->
 <script>
-// ========================================
-// PWA INSTALLATION & SERVICE WORKER
-// ========================================
+// ==========================================
+// SERVICE WORKER REGISTRATION - FIXED
+// ==========================================
 
 let deferredPrompt = null;
 
-// Register Service Worker
+// ✅ Register Service Worker (ONLY ONE REGISTRATION!)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const registration = await navigator.serviceWorker.register('/sw.js', {
-        scope: '/'
+      // ✅ Unregister old workers first (clean slate)
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (let registration of registrations) {
+        await registration.unregister();
+        console.log('🗑️ Old SW unregistered');
+      }
+      
+      // ✅ Register new worker
+      const registration = await navigator.serviceWorker.register('./sw.js', {
+        scope: './', // Same as manifest scope
+        updateViaCache: 'none'
       });
+      
       console.log('✅ SW registered:', registration.scope);
       
-      // Check for updates every 30 minutes
-      setInterval(() => {
-        registration.update();
-      }, 30 * 60 * 1000);
-      
-      // Handle SW updates
+      // ✅ Handle updates
       registration.addEventListener('updatefound', () => {
         const newWorker = registration.installing;
+        console.log('🔄 SW update found');
+        
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            // New SW available - prompt user
-            if (confirm('🔄 Nouvelle version disponible! Recharger?')) {
+            // New version available
+            if (confirm('🔄 Nouvelle version disponible! Recharger maintenant?')) {
               newWorker.postMessage({ type: 'SKIP_WAITING' });
-              window.location.reload();
             }
           }
         });
       });
+      
+      // ✅ Auto-reload on controller change
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          console.log('♻️ Reloading...');
+          window.location.reload();
+        }
+      });
+      
+      // ✅ Check for updates periodically (30 min)
+      setInterval(() => {
+        registration.update();
+        console.log('🔍 Checking for SW updates...');
+      }, 30 * 60 * 1000);
+      
     } catch (err) {
       console.error('❌ SW registration failed:', err);
     }
   });
 }
 
-// Capture PWA install prompt
+// ==========================================
+// PWA INSTALL PROMPT
+// ==========================================
+
+// Capture install prompt
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
+  console.log('📲 Install prompt ready');
   
   // Show custom install banner after 5 seconds
   setTimeout(() => {
@@ -1115,46 +1143,91 @@ window.addEventListener('beforeinstallprompt', (e) => {
   }, 5000);
 });
 
-// Install PWA
+// Install PWA function
 function installPWA() {
   const banner = document.getElementById('pwa-install-banner');
+  
   if (!deferredPrompt) {
-    alert('Installation non disponible. Utilisez "Ajouter à l\'écran d\'accueil" dans le menu du navigateur.');
-    banner.classList.remove('show');
+    alert('💡 Installation:\n\nUtilisez "Ajouter à l\'écran d\'accueil" dans le menu (⋮) de votre navigateur.');
+    if (banner) banner.classList.remove('show');
     return;
   }
   
   deferredPrompt.prompt();
   deferredPrompt.userChoice.then((result) => {
-    console.log('Install prompt result:', result.outcome);
+    console.log('Install result:', result.outcome);
     deferredPrompt = null;
-    banner.classList.remove('show');
+    if (banner) banner.classList.remove('show');
   });
 }
 
-// Dismiss prompt
+// Dismiss install prompt
 function dismissPWAPrompt() {
   const banner = document.getElementById('pwa-install-banner');
-  banner.classList.remove('show');
+  if (banner) banner.classList.remove('show');
   localStorage.setItem('pwa-dismissed', Date.now());
+  console.log('❌ Install prompt dismissed');
 }
 
-// Track installation
+// Track successful installation
 window.addEventListener('appinstalled', () => {
   console.log('✅ PWA installed successfully!');
   deferredPrompt = null;
+  
+  // Optional: Show success message
+  alert('🎉 Installation réussie!\n\nMijoro Boutique est maintenant sur votre écran d\'accueil.');
 });
 
-// Display mode detection
+// ==========================================
+// PWA MODE DETECTION
+// ==========================================
+
 window.addEventListener('DOMContentLoaded', () => {
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
-                       window.navigator.standalone ||
-                       document.referrer.includes('android-app://');
+    window.navigator.standalone ||
+    document.referrer.includes('android-app://');
   
   if (isStandalone) {
-    console.log('🚀 Running as PWA');
+    console.log('🚀 Running in PWA mode');
     document.body.classList.add('pwa-mode');
+    
+    // Hide install banner if already installed
+    const banner = document.getElementById('pwa-install-banner');
+    if (banner) banner.style.display = 'none';
+  } else {
+    console.log('🌐 Running in browser mode');
   }
+});
+
+// ==========================================
+// NOTIFICATION PERMISSION (Optional)
+// ==========================================
+
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) {
+    console.warn('❌ Notifications not supported');
+    return false;
+  }
+  
+  if (Notification.permission === 'granted') {
+    console.log('✅ Notifications already granted');
+    return true;
+  }
+  
+  if (Notification.permission !== 'denied') {
+    const permission = await Notification.requestPermission();
+    console.log('🔔 Notification permission:', permission);
+    return permission === 'granted';
+  }
+  
+  return false;
+}
+
+// Auto-request on PWA install (optional)
+window.addEventListener('appinstalled', () => {
+  setTimeout(() => {
+    requestNotificationPermission();
+  }, 3000);
 });
 </script>
 
