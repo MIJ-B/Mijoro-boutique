@@ -16648,4 +16648,540 @@ window.addEventListener('unhandledrejection', function(event) {
   }
 });
 
-console.log('✅ [Miora] Error handlers installed');
+console.log('✅ [Miora] Error handlers installed');/* ==========================================
+   REAL-TIME PRODUCTS SYNC ✅
+   ========================================== */
+
+(async function initRealtimeProducts() {
+  'use strict';
+  
+  let productsChannel = null;
+  
+  async function subscribeToProductsChanges() {
+    try {
+      console.log('[Products RT] 🔌 Connecting...');
+      
+      const sb = await ensureSupabase();
+      
+      // Cleanup old subscription
+      if (productsChannel) {
+        await productsChannel.unsubscribe();
+      }
+      
+      // Create new channel
+      productsChannel = sb.channel('products-realtime-' + Date.now());
+      
+      // Listen to changes
+      productsChannel
+        .on(
+          'postgres_changes',
+          { 
+            event: '*', 
+            schema: 'public', 
+            table: 'products' 
+          },
+          async (payload) => {
+            console.log('[Products RT] 🔔 Product change detected!');
+            console.log('[Products RT] Event:', payload.eventType);
+            console.log('[Products RT] Product:', payload.new?.title || payload.old?.title);
+            
+            // Reload products
+            if (typeof fetchSupabaseProducts === 'function') {
+              await fetchSupabaseProducts();
+              
+              // Re-render current view
+              const searchInput = document.getElementById('search');
+              const activeFilter = document.querySelector('#filters .filter-btn.active');
+              const category = activeFilter?.getAttribute('data-category') || 'all';
+              const searchTerm = searchInput?.value || '';
+              
+              if (typeof renderProducts === 'function') {
+                renderProducts(category, searchTerm);
+              }
+              
+              console.log('[Products RT] ✅ Products updated!');
+              
+              // Show notification
+              showProductNotification(payload.eventType, payload.new || payload.old);
+            }
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('[Products RT] ✅ Connected!');
+          } else if (status === 'TIMED_OUT') {
+            console.warn('[Products RT] ⏱️ Timeout, retrying...');
+            setTimeout(subscribeToProductsChanges, 5000);
+          }
+        });
+      
+    } catch (e) {
+      console.error('[Products RT] Error:', e);
+    }
+  }
+  
+  function showProductNotification(eventType, product) {
+    document.querySelectorAll('.rt-product-notification').forEach(n => n.remove());
+    
+    const messages = {
+      'INSERT': '🆕 Nouveau produit',
+      'UPDATE': '✏️ Produit modifié',
+      'DELETE': '🗑️ Produit supprimé'
+    };
+    
+    const title = product?.title || 'Produit';
+    const message = messages[eventType] || '🔄 Mise à jour';
+    
+    const notification = document.createElement('div');
+    notification.className = 'rt-product-notification';
+    notification.innerHTML = `
+      <div style="font-weight:700;margin-bottom:4px">${message}</div>
+      <div style="font-size:12px;opacity:.9">${title}</div>
+    `;
+    
+    notification.style.cssText = `
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      z-index: 9999;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      animation: slideInRight 0.3s ease;
+      max-width: 280px;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.style.animation = 'slideOutRight 0.3s ease';
+      setTimeout(() => notification.remove(), 300);
+    }, 4000);
+  }
+  
+  // Cleanup on unload
+  window.addEventListener('beforeunload', async () => {
+    if (productsChannel) {
+      await productsChannel.unsubscribe();
+    }
+  });
+  
+  // Auto-init
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(subscribeToProductsChanges, 1500);
+    });
+  } else {
+    setTimeout(subscribeToProductsChanges, 1500);
+  }
+  
+  console.log('[Products RT] ✅ Module loaded');
+  
+})();/* ==========================================
+   REAL-TIME QUICK ORDER SYNC ✅
+   ========================================== */
+
+(async function initRealtimeQuickOrder() {
+  'use strict';
+  
+  let qoChannel = null;
+  
+  async function subscribeToQOChanges() {
+    try {
+      console.log('[QO RT] 🔌 Connecting...');
+      
+      const sb = await ensureSupabase();
+      
+      // Cleanup old subscription
+      if (qoChannel) {
+        await qoChannel.unsubscribe();
+      }
+      
+      // Create new channel
+      qoChannel = sb.channel('quick-order-realtime-' + Date.now());
+      
+      // Listen to changes
+      qoChannel
+        .on(
+          'postgres_changes',
+          { 
+            event: '*', 
+            schema: 'public', 
+            table: 'quick_order_products' 
+          },
+          async (payload) => {
+            console.log('[QO RT] 🔔 Quick Order change detected!');
+            console.log('[QO RT] Event:', payload.eventType);
+            
+            // Reload QO products
+            if (typeof window.QOManagement !== 'undefined' && 
+                typeof window.QOManagement.loadProducts === 'function') {
+              
+              await window.QOManagement.loadProducts();
+              
+              // Re-render Quick Order section
+              if (typeof QuickOrder !== 'undefined' && 
+                  typeof QuickOrder.render === 'function') {
+                QuickOrder.render();
+              }
+              
+              console.log('[QO RT] ✅ Quick Order updated!');
+              
+              // Show notification
+              showQONotification(payload.eventType);
+            }
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('[QO RT] ✅ Connected!');
+          } else if (status === 'TIMED_OUT') {
+            console.warn('[QO RT] ⏱️ Timeout, retrying...');
+            setTimeout(subscribeToQOChanges, 5000);
+          }
+        });
+      
+    } catch (e) {
+      console.error('[QO RT] Error:', e);
+    }
+  }
+  
+  function showQONotification(eventType) {
+    document.querySelectorAll('.rt-qo-notification').forEach(n => n.remove());
+    
+    const messages = {
+      'INSERT': '🆕 Quick Order mis à jour',
+      'UPDATE': '✏️ Quick Order modifié',
+      'DELETE': '🗑️ Produit retiré du Quick Order'
+    };
+    
+    const message = messages[eventType] || '🔄 Mise à jour Quick Order';
+    
+    const notification = document.createElement('div');
+    notification.className = 'rt-qo-notification';
+    notification.textContent = message;
+    
+    notification.style.cssText = `
+      position: fixed;
+      top: 140px;
+      right: 20px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      z-index: 9999;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      animation: slideInRight 0.3s ease;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.style.animation = 'slideOutRight 0.3s ease';
+      setTimeout(() => notification.remove(), 300);
+    }, 3500);
+  }
+  
+  // Cleanup on unload
+  window.addEventListener('beforeunload', async () => {
+    if (qoChannel) {
+      await qoChannel.unsubscribe();
+    }
+  });
+  
+  // Auto-init
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(subscribeToQOChanges, 2000);
+    });
+  } else {
+    setTimeout(subscribeToQOChanges, 2000);
+  }
+  
+  console.log('[QO RT] ✅ Module loaded');
+  
+})();/* ==========================================
+   REAL-TIME LIKES SYNC ✅
+   ========================================== */
+
+(async function initRealtimeLikes() {
+  'use strict';
+  
+  let likesChannel = null;
+  
+  async function subscribeToLikesChanges() {
+    try {
+      console.log('[Likes RT] 🔌 Connecting...');
+      
+      const sb = await ensureSupabase();
+      
+      // Cleanup old subscription
+      if (likesChannel) {
+        await likesChannel.unsubscribe();
+      }
+      
+      // Create new channel
+      likesChannel = sb.channel('likes-realtime-' + Date.now());
+      
+      // Listen to changes
+      likesChannel
+        .on(
+          'postgres_changes',
+          { 
+            event: '*', 
+            schema: 'public', 
+            table: 'product_likes' 
+          },
+          async (payload) => {
+            console.log('[Likes RT] 💖 Like change detected!');
+            console.log('[Likes RT] Event:', payload.eventType);
+            console.log('[Likes RT] Product ID:', payload.new?.product_id || payload.old?.product_id);
+            
+            // Reload likes counts
+            if (typeof syncLikesFromSupabase === 'function') {
+              await syncLikesFromSupabase();
+              console.log('[Likes RT] ✅ Likes synced!');
+            }
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('[Likes RT] ✅ Connected!');
+          } else if (status === 'TIMED_OUT') {
+            console.warn('[Likes RT] ⏱️ Timeout, retrying...');
+            setTimeout(subscribeToLikesChanges, 5000);
+          }
+        });
+      
+    } catch (e) {
+      console.error('[Likes RT] Error:', e);
+    }
+  }
+  
+  // Cleanup on unload
+  window.addEventListener('beforeunload', async () => {
+    if (likesChannel) {
+      await likesChannel.unsubscribe();
+    }
+  });
+  
+  // Auto-init
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(subscribeToLikesChanges, 2500);
+    });
+  } else {
+    setTimeout(subscribeToLikesChanges, 2500);
+  }
+  
+  console.log('[Likes RT] ✅ Module loaded');
+  
+})();/* ==========================================
+   REAL-TIME STATUS INDICATOR ✅
+   Top Right Position - Non-intrusive
+   ========================================== */
+
+(function initRealtimeStatusIndicator() {
+  'use strict';
+  
+  // Create status indicator
+  const indicator = document.createElement('div');
+  indicator.id = 'rt-status-indicator';
+  indicator.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="rt-status-dot"></div>
+      <span class="rt-status-text">Connexion...</span>
+    </div>
+  `;
+  
+  // ✅ TOP RIGHT POSITION
+  indicator.style.cssText = `
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.95));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    color: #cbd5e1;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 9999;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: auto;
+  `;
+  
+  // Styles for dot
+  const styles = document.createElement('style');
+  styles.textContent = `
+    .rt-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #64748b;
+      animation: rt-pulse 2s ease-in-out infinite;
+      transition: all 0.3s ease;
+    }
+    
+    .rt-status-dot.connected {
+      background: #10b981;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+      animation: none;
+    }
+    
+    .rt-status-dot.error {
+      background: #ef4444;
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+      animation: none;
+    }
+    
+    @keyframes rt-pulse {
+      0%, 100% { 
+        opacity: 1; 
+        transform: scale(1);
+      }
+      50% { 
+        opacity: 0.6; 
+        transform: scale(0.95);
+      }
+    }
+    
+    #rt-status-indicator:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4),
+                  0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+      border-color: rgba(59, 130, 246, 0.4);
+    }
+    
+    #rt-status-indicator:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Mobile optimization */
+    @media (max-width: 768px) {
+      #rt-status-indicator {
+        top: 12px;
+        right: 12px;
+        padding: 8px 14px;
+        font-size: 11px;
+      }
+      
+      .rt-status-dot {
+        width: 7px;
+        height: 7px;
+      }
+    }
+    
+    /* Animation slide in on load */
+    @keyframes slideInFromRight {
+      from {
+        transform: translateX(100px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    #rt-status-indicator {
+      animation: slideInFromRight 0.5s ease-out;
+    }
+  `;
+  
+  document.head.appendChild(styles);
+  document.body.appendChild(indicator);
+  
+  // Update status
+  let connectedModules = 0;
+  const totalModules = 4; // Slideshow, Products, QO, Likes
+  
+  function updateStatus() {
+    const dot = indicator.querySelector('.rt-status-dot');
+    const text = indicator.querySelector('.rt-status-text');
+    
+    if (connectedModules === totalModules) {
+      dot.className = 'rt-status-dot connected';
+      text.textContent = 'Real-time actif';
+      text.style.color = '#10b981';
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        if (indicator.style.opacity !== '0.4') {
+          indicator.style.opacity = '0.4';
+          indicator.style.pointerEvents = 'auto'; // Still clickable
+        }
+      }, 5000);
+      
+    } else if (connectedModules > 0) {
+      dot.className = 'rt-status-dot';
+      text.textContent = `${connectedModules}/${totalModules}`;
+      text.style.color = '#f59e0b';
+      indicator.style.opacity = '1';
+      
+    } else {
+      dot.className = 'rt-status-dot error';
+      text.textContent = 'Hors ligne';
+      text.style.color = '#ef4444';
+      indicator.style.opacity = '1';
+    }
+  }
+  
+  // Listen to console logs to track connections
+  const originalConsoleLog = console.log;
+  console.log = function(...args) {
+    originalConsoleLog.apply(console, args);
+    
+    const message = args.join(' ');
+    
+    if (message.includes('[Slideshow RT] ✅ Connected') ||
+      message.includes('[Products RT] ✅ Connected') ||
+      message.includes('[QO RT] ✅ Connected') ||
+      message.includes('[Likes RT] ✅ Connected')) {
+      connectedModules++;
+      updateStatus();
+    }
+  };
+  
+  // Click to toggle visibility
+  indicator.addEventListener('click', function() {
+    if (this.style.opacity === '0.4' || this.style.opacity === '0') {
+      this.style.opacity = '1';
+      this.style.transform = 'translateY(0)';
+    } else {
+      this.style.opacity = '0.4';
+      this.style.transform = 'translateY(-2px)';
+    }
+  });
+  
+  // Double click to hide completely
+  indicator.addEventListener('dblclick', function() {
+    this.style.opacity = '0';
+    this.style.pointerEvents = 'none';
+    
+    // Show again after 10 seconds
+    setTimeout(() => {
+      this.style.opacity = '0.4';
+      this.style.pointerEvents = 'auto';
+    }, 10000);
+  });
+  
+  // Initial update
+  updateStatus();
+  
+  console.log('[RT Status] ✅ Indicator ready (top right)');
+  
+})();
