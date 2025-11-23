@@ -599,10 +599,12 @@
 </button>
 
 <!-- ==========================================
-     BOTTOM NAVIGATION - GLASSMORPHISM DESIGN
+     BOTTOM NAVIGATION - 5 ITEMS ✅
+     Home / Shop / Cart / Miora / Params
      ========================================== -->
 <nav class="bottom-nav" role="navigation" aria-label="Navigation principale">
   
+  <!-- HOME -->
   <button type="button" class="nav-btn active" data-section="home" aria-label="Home" data-i18n-aria-label="nav_home">
     <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
       <path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" fill="currentColor" />
@@ -610,6 +612,7 @@
     <span class="label" data-i18n="nav_home">Home</span>
   </button>
   
+  <!-- SHOP -->
   <button type="button" class="nav-btn" data-section="shop" aria-label="Shop" data-i18n-aria-label="nav_shop">
     <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
       <path d="M3 7h18l-1.5 11.5a1 1 0 0 1-1 .9H6.5a1 1 0 0 1-1-.9L4 7zM7 4h10v2H7z" fill="currentColor" />
@@ -617,22 +620,27 @@
     <span class="label" data-i18n="nav_shop">Shop</span>
   </button>
   
-  <!-- ✅ MIORA BUTTON -->
-  <button type="button" class="nav-btn" id="nav-miora" aria-label="Miora AI" aria-controls="miora-chat">
-  <img src="https://i.ibb.co/5xkSKtLt/IMG-20251116-WA0000.jpg" 
-       alt="Miora" 
-       class="icon-miora"
-       loading="lazy">
-  <span class="label">Miora</span>
-</button>
-  
-  <button type="button" class="nav-btn owner-tool" data-section="dashboard" aria-label="Dashboard" data-i18n-aria-label="nav_dashboard" style="display:none">
-    <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
-      <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" fill="currentColor" />
-    </svg>
-    <span class="label" data-i18n="nav_dashboard">Dashboard</span>
+  <!-- CART - NOUVEAU! ✅ -->
+  <button type="button" class="nav-btn nav-btn-cart" id="nav-cart-btn" aria-label="Panier" data-i18n-aria-label="nav_cart">
+    <div class="nav-cart-wrapper">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+        <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" fill="currentColor" />
+      </svg>
+      <span class="nav-cart-badge" id="nav-cart-badge">0</span>
+    </div>
+    <span class="label" data-i18n="nav_cart">Panier</span>
   </button>
   
+  <!-- MIORA ✅ -->
+  <button type="button" class="nav-btn nav-btn-miora" id="nav-miora" aria-label="Miora AI" aria-controls="miora-chat">
+    <img src="https://i.ibb.co/5xkSKtLt/IMG-20251116-WA0000.jpg" 
+         alt="Miora" 
+         class="icon-miora"
+         loading="lazy">
+    <span class="label">Miora</span>
+  </button>
+  
+  <!-- PARAMS -->
   <button type="button" class="nav-btn" data-section="params" aria-label="Paramètre" data-i18n-aria-label="nav_params">
     <svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
       <path d="M19.4 12.9a7.2 7.2 0 0 0 0-1.8l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.4a.5.5 0 0 0-.6-.2l-2.5 1a7.1 7.1 0 0 0-1.6-.9L14 2.4a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.7a7.1 7.1 0 0 0-1.6.9l-2.5-1a.5.5 0 0 0-.6.2l-2 3.4a.5.5 0 0 0 .1.6L4.6 11a7.2 7.2 0 0 0 0 1.8L2.5 14.4a.5.5 0 0 0-.1.6l2 3.4c.1.2.4.3.6.2l2.5-1c.5.4 1 0 1.6.9l.4 2.7c.05.2.2.4.4.4h4c.2 0 .4-.2.4-.4l.4-2.7c.6-.9 1.1-.5 1.6-.9l2.5 1c.2.1.5 0 .6-.2l2-3.4a.5.5 0 0 0-.1-.6l-2.1-1.6zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z" fill="currentColor" />
@@ -640,7 +648,6 @@
     <span class="label" data-i18n="nav_params">Paramètre</span>
   </button>
 </nav>
-
 <!-- ==========================================
      PARAM FIXED PANEL
      ========================================== -->
