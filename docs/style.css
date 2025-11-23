@@ -511,13 +511,7 @@ p {
    QUICK ORDER MODULE
    ========================================== */
 
-.quick-order-card {
-    backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
-}
+
 
 .qo-header {
   display: flex;
@@ -7154,4 +7148,57 @@ transform: translateY(0);
   background: rgba(0,0,0,.03);
   border-color: rgba(0,0,0,.15);
   color: #1e293b;
+}/* ==========================================
+   CART BUTTON IN PRODUCT CARDS
+   ========================================== */
+
+.icon-cart {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: #fff !important;
+  border: none !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.icon-cart::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.icon-cart:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+.icon-cart:hover {
+  background: linear-gradient(135deg, #059669, #047857) !important;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(16,185,129,0.4);
+}
+
+.icon-cart i {
+  font-size: 18px;
+  transition: transform 0.3s ease;
+}
+
+.icon-cart:active i {
+  transform: scale(0.9);
+}
+
+/* Animation pulse au hover */
+@keyframes cartPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.icon-cart:hover i {
+  animation: cartPulse 0.6s ease infinite;
 }
