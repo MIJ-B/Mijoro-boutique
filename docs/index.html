@@ -540,64 +540,91 @@
     
   </div>
   
-  <!-- ========== SCROLLABLE PRODUCTS WRAPPER ========== -->
-  <div id="products-wrapper">
-    <div id="products-row" class="products-row" role="list" aria-label="Liste des produits — défilement vertical">
-      <!-- Products cards rendered here by JS -->
-    </div>
-    <div id="products-box" style="display:none">
-      <!-- Alternative grid view -->
-    </div>
+<!-- ========== SCROLLABLE PRODUCTS WRAPPER ========== -->
+<div id="products-wrapper">
+  
+  <!-- Mobile/Tablet View (Vertical Scroll) -->
+  <div id="products-row" class="products-row" role="list" aria-label="Liste des produits — défilement vertical">
+    <!-- Products cards rendered here by JS -->
   </div>
   
+  <!-- ✅ VAOVAO: Pagination for products-row -->
+  <div id="pagination-row"></div>
+  
+  <!-- Desktop View (Grid) -->
+  <div id="products-box" style="display:none">
+    <!-- Alternative grid view -->
+  </div>
+  
+  <!-- ✅ VAOVAO: Pagination for products-box -->
+  <div id="pagination-box"></div>
+  
+</div>
 </section>
 
-<!-- ========================================
-     CART DRAWER - DRAGGABLE + COLLAPSIBLE
-     ======================================== -->
+<!-- ==========================================
+     CART DRAWER - COMPLETE STRUCTURE
+     ========================================== -->
+
+<!-- Cart Drawer -->
+<div id="cdCartDrawer" class="cd-cart-drawer" aria-hidden="true">
+  <!-- Header -->
+<div class="cd-cart-header">
+  <button type="button" class="cd-cart-close" aria-label="Retour">
+    <i class="fa-solid fa-arrow-left"></i> <!-- ✅ VAOVAO: arrow-left -->
+  </button>
+  <h2 class="cd-cart-title">
+    <i class="fa-solid fa-cart-shopping"></i>
+    <span>Panier</span>
+  </h2>
+
+  </div>
+  
+  <!-- Body (items container) -->
+  <div id="cdCartBody" class="cd-cart-body">
+    <!-- Items rendered dynamically -->
+  </div>
+  
+  <!-- Footer -->
+  <div class="cd-cart-footer">
+    <div class="cd-footer-total">
+      <span class="cd-total-label">Total</span>
+      <div id="cdCartTotal">
+        <i class="fa-solid fa-coins"></i>
+        <span>0 Ar</span>
+      </div>
+    </div>
+    
+    <div class="cd-footer-actions">
+      <button 
+        type="button" 
+        class="cd-icon-btn cd-btn-clear" 
+        id="cdClearBtn"
+        data-tooltip="Vider"
+        aria-label="Vider le panier">
+        <i class="fa-solid fa-trash"></i>
+      </button>
+      
+      <button 
+        type="button" 
+        class="cd-icon-btn cd-btn-checkout" 
+        id="cdCheckoutBtn"
+        data-tooltip="Commander via WhatsApp"
+        aria-label="Commander via WhatsApp">
+        <i class="fa-brands fa-whatsapp"></i>
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- Backdrop -->
-<div id="cdBackdrop" class="cd-backdrop" hidden></div>
+<div id="cdBackdrop" hidden></div>
 
-<!-- Drawer -->
-<aside id="cdCartDrawer" class="cd-cart-drawer" aria-hidden="true" role="dialog" aria-label="Panier">
-  
-  <!-- Header -->
-  <div class="cd-cart-header">
-    <h3 class="cd-cart-title" data-i18n="cart_title">Panier</h3>
-    <button class="cd-cart-close" aria-label="Fermer panier">&times;</button>
-  </div>
-
-  <!-- Body (liste produits) -->
-  <div id="cdCartBody" class="cd-cart-body" tabindex="0" aria-live="polite" aria-relevant="all">
-    <!-- Rempli par JS -->
-  </div>
-
-  <!-- Footer (total + commander) -->
-  <div class="cd-cart-footer">
-    <div class="cd-total-line">
-      <span data-i18n="cart_total">Total</span>
-      <strong id="cdCartTotal">0 Ar</strong>
-    </div>
-    <div class="cd-footer-actions">
-      <button id="cdClearBtn" class="cd-btn-clear" title="Vider le panier" data-i18n-title="cart_clear">
-        <i class="fa-solid fa-trash-can"></i>
-        <span data-i18n="cart_clear">Vider</span>
-      </button>
-      <button id="cdCheckoutBtn" class="cd-btn-checkout" data-i18n="cart_checkout">
-        <i class="fa-brands fa-whatsapp"></i>
-        <span>Commander</span>
-      </button>
-    </div>
-  </div>
-</aside>
-
-<!-- Floating icon (minimized) -->
-<button id="cdCartFab" class="cd-cart-fab" aria-label="Ouvrir panier" data-i18n-aria-label="cart_title">
-  <i class="fa-solid fa-cart-shopping"></i>
-  <span id="cdCartBadge" class="cd-badge" style="display:none">0</span>
+<!-- FAB Button -->
+<button id="cdCartFab" aria-label="Ouvrir le panier">
+  <i class="fa-solid fa-shopping-cart"></i>
+  <span id="cdCartBadge">0</span>
 </button>
-
 <!-- ==========================================
      BOTTOM NAVIGATION - 5 ITEMS ✅
      Home / Shop / Cart / Miora / Params
