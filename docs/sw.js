@@ -219,9 +219,10 @@ function offlineFallback() {
    PUSH NOTIFICATIONS ✅ FIXED
    ========================================== */
 
-// ✅ Default icons (fallback)
-const DEFAULT_ICON = 'https://mijoroboutique.netlify.app/icons/android-launchericon-192-192.png';
-const DEFAULT_BADGE = 'https://mijoroboutique.netlify.app/icons/android-launchericon-96-96.png';
+// ✅ Default icons (fallback) - Using product image as icon
+const DEFAULT_ICON = './icons/android-launchericon-192-192.png';
+const DEFAULT_BADGE = './icons/android-launchericon-96-96.png';
+const FALLBACK_PRODUCT_IMAGE = 'https://i.ibb.co/kVQxwznY/IMG-20251104-074641.jpg';
 
 self.addEventListener('push', function(event) {
   console.log('[SW] 📨 Push received');
@@ -248,10 +249,10 @@ self.addEventListener('push', function(event) {
         title: payload.title || notificationData.title,
         body: payload.body || notificationData.body,
         
-        // ✅ CRITICAL: Use payload icons if available
-        icon: payload.icon || DEFAULT_ICON,
+        // ✅ CRITICAL: Use product image as icon if available, otherwise logo
+        icon: payload.image || payload.icon || DEFAULT_ICON,
         badge: payload.badge || DEFAULT_BADGE,
-        image: payload.image,  // Large image (600x400)
+        image: payload.image || FALLBACK_PRODUCT_IMAGE,  // Large image (600x400)
         
         tag: payload.tag || 'general',
         requireInteraction: payload.requireInteraction !== undefined ? payload.requireInteraction : true,
