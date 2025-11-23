@@ -1,16 +1,14 @@
 {
-  "name": "Mijoro Boutique - Produits Numériques et Physiques",
+  "name": "Mijoro Boutique",
   "short_name": "Mijoro",
-  "description": "Boutique en ligne malagasy - eBooks, formations vidéo, applications et produits physiques. Livraison rapide Madagascar.",
+  "description": "Boutique de produits numériques et physiques malagasy - eBooks, vidéos, apps et produits physiques",
   "lang": "fr-MG",
   "dir": "ltr",
-  "start_url": "/?source=pwa",
-  "scope": "/",
-  "id": "/?source=pwa",
-  
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "id": "./?source=pwa",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
-  
   "background_color": "#0a0e17",
   "theme_color": "#4ade80",
   "orientation": "portrait-primary",
@@ -26,7 +24,7 @@
       "src": "./icons/android-launchericon-96-96.png",
       "sizes": "96x96",
       "type": "image/png",
-      "purpose": "any monochrome"
+      "purpose": "any badge"
     },
     {
       "src": "./icons/android-launchericon-144-144.png",
@@ -66,32 +64,32 @@
       "sizes": "540x960",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Page d'accueil Mijoro Boutique"
+      "label": "Écran d'accueil"
     },
     {
       "src": "./screenshots/mobile-shop.png",
       "sizes": "540x960",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Catalogue de produits"
+      "label": "Boutique"
     },
     {
       "src": "./screenshots/desktop-home.png",
       "sizes": "1920x1080",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Version desktop"
+      "label": "Vue desktop"
     }
   ],
   
-  "categories": ["shopping", "business", "education", "productivity"],
+  "categories": ["shopping", "business", "education"],
   
   "shortcuts": [
     {
       "name": "Boutique",
       "short_name": "Shop",
-      "description": "Voir tous les produits disponibles",
-      "url": "/?page=shop#shop",
+      "description": "Voir tous les produits",
+      "url": "./?page=shop#shop",
       "icons": [
         {
           "src": "./icons/android-launchericon-192-192.png",
@@ -101,10 +99,10 @@
       ]
     },
     {
-      "name": "Mon Panier",
+      "name": "Panier",
       "short_name": "Panier",
-      "description": "Accéder à mon panier d'achat",
-      "url": "/?cart=open",
+      "description": "Voir mon panier",
+      "url": "./?cart=open",
       "icons": [
         {
           "src": "./icons/android-launchericon-192-192.png",
@@ -116,21 +114,8 @@
     {
       "name": "Produits VIP",
       "short_name": "VIP",
-      "description": "Produits exclusifs pour membres VIP",
-      "url": "/?filter=vip#shop",
-      "icons": [
-        {
-          "src": "./icons/android-launchericon-192-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        }
-      ]
-    },
-    {
-      "name": "Nouveautés",
-      "short_name": "New",
-      "description": "Découvrir les derniers produits",
-      "url": "/?filter=new#shop",
+      "description": "Accéder aux produits VIP",
+      "url": "./?filter=vip#shop",
       "icons": [
         {
           "src": "./icons/android-launchericon-192-192.png",
@@ -142,30 +127,5 @@
   ],
   
   "prefer_related_applications": false,
-  "related_applications": [],
-  
-  "iarc_rating_id": "",
-  
-  "launch_handler": {
-    "client_mode": "navigate-existing"
-  },
-  
-  "protocol_handlers": [],
-  
-  "share_target": {
-    "action": "/share",
-    "method": "POST",
-    "enctype": "multipart/form-data",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "url": "url"
-    }
-  },
-  
-  "serviceworker": {
-    "src": "./sw.js",
-    "scope": "/",
-    "use_cache": true
-  }
+  "related_applications": []
 }
