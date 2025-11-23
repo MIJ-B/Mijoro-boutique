@@ -138,6 +138,62 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(diagSupabase, 1000);
 });
 
+/* ==========================================
+   SERVICE WORKER REGISTRATION (OFFLINE MODE)
+   ========================================== */
+
+(function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) {
+    console.warn('[SW] Service Workers non supportés');
+    return;
+  }
+
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('./sw.js', {
+        scope: './'
+      });
+
+      console.log('[SW] Enregistré avec succès:', registration.scope);
+
+      // Gestion des mises à jour
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        console.log('[SW] Nouvelle version détectée');
+
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            // Nouvelle version disponible
+            showUpdateNotification(newWorker);
+          }
+        });
+      });
+
+      // Auto-refresh si le SW change
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
+
+    } catch (err) {
+      console.error('[SW] Erreur enregistrement:', err);
+    }
+  });
+
+  // Notification de mise à jour
+  function showUpdateNotification(worker) {
+    const shouldUpdate = confirm(
+      '🔄 Misy version vaovao!\n\nReload ilay page mba hanova?'
+    );
+
+    if (shouldUpdate) {
+      worker.postMessage({ type: 'SKIP_WAITING' });
+    }
+  }
+})();
 
 /* ==========================================
    OFFLINE INDICATOR (optional but recommended)
