@@ -16781,6 +16781,160 @@ console.log('✅ [Miora] Error handlers installed');/* =========================
   console.log('[Products RT] ✅ Module loaded');
   
 })();/* ==========================================
+   BOTTOM NAV CART INTEGRATION ✅
+   ========================================== */
+
+(function initBottomNavCart() {
+  'use strict';
+  
+  console.log('[Bottom Nav Cart] 🚀 Initializing...');
+  
+  // ========================================
+  // CART BUTTON HANDLER
+  // ========================================
+  
+  function wireCartButton() {
+    const cartBtn = document.getElementById('nav-cart-btn');
+    
+    if (!cartBtn) {
+      console.warn('[Bottom Nav Cart] Cart button not found');
+      return;
+    }
+    
+    // Remove old listeners
+    const newBtn = cartBtn.cloneNode(true);
+    cartBtn.parentNode.replaceChild(newBtn, cartBtn);
+    
+    // Add click handler
+    newBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      console.log('[Bottom Nav Cart] Opening cart drawer...');
+      
+      // Open cart drawer
+      if (typeof window.CartAPI !== 'undefined' && window.CartAPI.open) {
+        window.CartAPI.open();
+      } else {
+        console.warn('[Bottom Nav Cart] CartAPI not available');
+        
+        // Fallback: try old method
+        const drawer = document.getElementById('cdCartDrawer');
+        if (drawer) {
+          drawer.classList.add('is-open');
+          drawer.classList.remove('is-minimized');
+          drawer.setAttribute('aria-hidden', 'false');
+          
+          const backdrop = document.getElementById('cdBackdrop');
+          if (backdrop) {
+            backdrop.hidden = false;
+            setTimeout(() => backdrop.classList.add('is-open'), 10);
+          }
+        }
+      }
+    });
+    
+    console.log('[Bottom Nav Cart] ✓ Cart button wired');
+  }
+  
+  // ========================================
+  // SYNC BADGE WITH CART
+  // ========================================
+  
+  function syncCartBadge() {
+    const badge = document.getElementById('nav-cart-badge');
+    
+    if (!badge) {
+      console.warn('[Bottom Nav Cart] Badge not found');
+      return;
+    }
+    
+    // Get cart count
+    let count = 0;
+    
+    if (typeof window.CartAPI !== 'undefined' && window.CartAPI.state) {
+      count = window.CartAPI.state.items.size || 0;
+    }
+    
+    // Update badge
+    badge.textContent = String(count);
+    
+    if (count > 0) {
+      badge.style.display = 'flex';
+      
+      // Add pulse effect on change
+      badge.classList.remove('pulse-once');
+      void badge.offsetWidth; // Force reflow
+      badge.classList.add('pulse-once');
+      
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+  
+  // ========================================
+  // WATCH CART CHANGES
+  // ========================================
+  
+  function watchCartChanges() {
+    // Method 1: MutationObserver on cart drawer badge
+    const cdBadge = document.getElementById('cdCartBadge');
+    
+    if (cdBadge) {
+      const observer = new MutationObserver(() => {
+        syncCartBadge();
+      });
+      
+      observer.observe(cdBadge, {
+        childList: true,
+        characterData: true,
+        subtree: true
+      });
+      
+      console.log('[Bottom Nav Cart] ✓ Watching cart changes (MutationObserver)');
+    }
+    
+    // Method 2: Interval fallback (every 2 seconds)
+    setInterval(syncCartBadge, 2000);
+  }
+  
+  // ========================================
+  // PULSE ANIMATION
+  // ========================================
+  
+  const pulseStyles = document.createElement('style');
+  pulseStyles.textContent = `
+    @keyframes pulse-once {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+    
+    .pulse-once {
+      animation: pulse-once 0.4s ease;
+    }
+  `;
+  document.head.appendChild(pulseStyles);
+  
+  // ========================================
+  // INITIALIZE
+  // ========================================
+  
+  function init() {
+    wireCartButton();
+    syncCartBadge();
+    watchCartChanges();
+    
+    console.log('[Bottom Nav Cart] ✅ Initialized');
+  }
+  
+  // Auto-init
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+  
+})();/* ==========================================
    REAL-TIME QUICK ORDER SYNC ✅
    ========================================== */
 
