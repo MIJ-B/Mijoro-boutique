@@ -1062,67 +1062,6 @@
 </div>
 <!-- ✅ PWA REGISTRATION SCRIPT -->
 <script>
-// ==========================================
-// SERVICE WORKER REGISTRATION - FIXED
-// ==========================================
-
-let deferredPrompt = null;
-
-// ✅ Register Service Worker (ONLY ONE REGISTRATION!)
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', async () => {
-    try {
-      // ✅ Unregister old workers first (clean slate)
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      for (let registration of registrations) {
-        await registration.unregister();
-        console.log('🗑️ Old SW unregistered');
-      }
-      
-      // ✅ Register new worker
-      const registration = await navigator.serviceWorker.register('./sw.js', {
-        scope: './', // Same as manifest scope
-        updateViaCache: 'none'
-      });
-      
-      console.log('✅ SW registered:', registration.scope);
-      
-      // ✅ Handle updates
-      registration.addEventListener('updatefound', () => {
-        const newWorker = registration.installing;
-        console.log('🔄 SW update found');
-        
-        newWorker.addEventListener('statechange', () => {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            // New version available
-            if (confirm('🔄 Nouvelle version disponible! Recharger maintenant?')) {
-              newWorker.postMessage({ type: 'SKIP_WAITING' });
-            }
-          }
-        });
-      });
-      
-      // ✅ Auto-reload on controller change
-      let refreshing = false;
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) {
-          refreshing = true;
-          console.log('♻️ Reloading...');
-          window.location.reload();
-        }
-      });
-      
-      // ✅ Check for updates periodically (30 min)
-      setInterval(() => {
-        registration.update();
-        console.log('🔍 Checking for SW updates...');
-      }, 30 * 60 * 1000);
-      
-    } catch (err) {
-      console.error('❌ SW registration failed:', err);
-    }
-  });
-}
 
 // ==========================================
 // PWA INSTALL PROMPT
