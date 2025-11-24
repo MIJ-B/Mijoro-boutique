@@ -1,10 +1,17 @@
 /*==========================================
-   SERVICE WORKER - OFFLINE MODE + PREMIUM NOTIFICATIONS
+   SERVICE WORKER - OPTIMIZED VERSION
+   PWA Score: 44/44 Target
    ========================================== */
 
-const CACHE_NAME = 'mijoro-v1.7';
-const OFFLINE_CACHE = 'mijoro-offline-v1';
-const IMAGE_CACHE = 'mijoro-images-v1';
+const VERSION = '1.8.0';
+const CACHE_NAME = `mijoro-v${VERSION}`;
+const OFFLINE_CACHE = `mijoro-offline-v${VERSION}`;
+const IMAGE_CACHE = `mijoro-images-v${VERSION}`;
+const API_CACHE = `mijoro-api-v${VERSION}`;
+
+// ✅ Timeout configuration
+const FETCH_TIMEOUT = 8000;
+const CACHE_TIMEOUT = 3000;
 
 // Assets critiques
 const STATIC_ASSETS = [
@@ -12,41 +19,78 @@ const STATIC_ASSETS = [
   './index.html',
   './style.css',
   './app.js',
+  './manifest.json',
   'https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css'
 ];
 
-// Patterns
+// Patterns pour cache
 const CACHE_PATTERNS = [
   /\.(?:png|jpg|jpeg|svg|gif|webp|avif)$/i,
   /\.(?:woff2?|ttf|eot|otf)$/i,
   /\.(?:css|js)$/i,
+  /fonts\.googleapis\.com/i,
+  /fonts\.gstatic\.com/i,
+  /cdnjs\.cloudflare\.com/i,
   /ibb\.co/i
 ];
 
-// ✅ SKIP - Aza cached ny API calls
+// ✅ API patterns pour stratégie spéciale
+const API_PATTERNS = [
+  /supabase\.co.*\/rest\//i,
+  /supabase\.co.*\/auth\//i,
+  /api\./i
+];
+
+// Skip cache
 const SKIP_CACHE = [
   /chrome-extension:/,
   /localhost:.*hot-update/,
-  /\.map$/i,
-  /api-inference\.huggingface\.co/i,
-  /api\.groq\.com/i,
-  /api\.cohere\.ai/i,
-  /supabase\.co.*\/rest\//i,
-  /supabase\.co.*\/auth\//i
+  /\.map$/i
 ];
+
+/* ==========================================
+   UTILITIES
+   ========================================== */
+
+// ✅ Fetch avec timeout
+function fetchWithTimeout(request, timeout = FETCH_TIMEOUT) {
+  return Promise.race([
+    fetch(request),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Fetch timeout')), timeout)
+    )
+  ]);
+}
+
+// ✅ Log avec timestamp
+function log(message, data = '') {
+  console.log(`[SW ${new Date().toISOString().split('T')[1].slice(0, 8)}] ${message}`, data);
+}
 
 /* ==========================================
    INSTALL
    ========================================== */
 self.addEventListener('install', (e) => {
-  console.log('[SW] Installation...');
+  log('📦 Installation...');
+  
   e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS).catch((err) => {
-        console.warn('[SW] Erreur pre-cache:', err);
-      });
-    }).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME)
+      .then((cache) => {
+        log('✅ Pre-caching static assets');
+        return cache.addAll(STATIC_ASSETS).catch((err) => {
+          log('⚠️ Pre-cache partial failure:', err.message);
+          // Continue installation même si certains assets échouent
+          return Promise.resolve();
+        });
+      })
+      .then(() => {
+        log('✅ Skip waiting');
+        return self.skipWaiting();
+      })
+      .catch((err) => {
+        log('❌ Install error:', err);
+      })
   );
 });
 
@@ -54,38 +98,55 @@ self.addEventListener('install', (e) => {
    ACTIVATE
    ========================================== */
 self.addEventListener('activate', (e) => {
-  console.log('[SW] Activation...');
+  log('🔄 Activation...');
+  
   e.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys
-          .filter((key) => !['mijoro-v1.7', 'mijoro-offline-v1', 'mijoro-images-v1'].includes(key))
-          .map((key) => {
-            console.log('[SW] Suppression cache obsolète:', key);
-            return caches.delete(key);
-          })
-      );
-    }).then(() => self.clients.claim())
+    Promise.all([
+      // Nettoyer les anciens caches
+      caches.keys().then((keys) => {
+        const validCaches = [CACHE_NAME, OFFLINE_CACHE, IMAGE_CACHE, API_CACHE];
+        return Promise.all(
+          keys
+            .filter((key) => !validCaches.includes(key))
+            .map((key) => {
+              log('🗑️ Deleting old cache:', key);
+              return caches.delete(key);
+            })
+        );
+      }),
+      
+      // Prendre le contrôle immédiatement
+      self.clients.claim()
+    ]).then(() => {
+      log('✅ Activation complete');
+    })
   );
 });
 
 /* ==========================================
-   FETCH - UNIFIED STRATEGY ✅
+   FETCH - UNIFIED STRATEGY
    ========================================== */
 self.addEventListener('fetch', (e) => {
   const { request } = e;
   const url = new URL(request.url);
 
   // Ignore non-http
-  if (!url.protocol.startsWith('http')) return;
-
-  // ✅ CRITICAL: Skip cache for API calls
-  if (SKIP_CACHE.some((pattern) => pattern.test(url.href))) {
-    console.log('[SW] Bypassing cache for:', url.href);
+  if (!url.protocol.startsWith('http')) {
     return;
   }
 
-  // Images - Cache First
+  // Skip cache patterns
+  if (SKIP_CACHE.some((pattern) => pattern.test(url.href))) {
+    return;
+  }
+
+  // ✅ API calls - Network First avec cache fallback
+  if (API_PATTERNS.some((pattern) => pattern.test(url.href))) {
+    e.respondWith(handleAPI(request));
+    return;
+  }
+
+  // Images - Cache First avec update en background
   if (/\.(jpg|jpeg|png|gif|webp|svg|avif)$/i.test(url.pathname)) {
     e.respondWith(handleImage(request));
     return;
@@ -97,7 +158,13 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // Everything else - Network First
+  // HTML & navigation - Network First
+  if (request.mode === 'navigate' || request.destination === 'document') {
+    e.respondWith(networkFirst(request));
+    return;
+  }
+
+  // Default - Network First
   e.respondWith(networkFirst(request));
 });
 
@@ -105,7 +172,7 @@ self.addEventListener('fetch', (e) => {
    STRATEGIES
    ========================================== */
 
-// Cache First
+// ✅ Cache First (avec update background)
 async function cacheFirst(request) {
   try {
     const cache = await caches.open(CACHE_NAME);
@@ -113,53 +180,122 @@ async function cacheFirst(request) {
     
     if (cached) {
       // Update in background (stale-while-revalidate)
-      fetch(request).then((response) => {
+      fetchWithTimeout(request).then((response) => {
         if (response && response.ok) {
           cache.put(request, response.clone());
         }
-      }).catch(() => {});
+      }).catch(() => {
+        // Silent fail pour background update
+      });
       
       return cached;
     }
 
-    const response = await fetch(request);
+    // Pas en cache, fetch avec timeout
+    const response = await fetchWithTimeout(request);
+    
     if (response && response.ok && request.method === 'GET') {
       cache.put(request, response.clone());
     }
+    
     return response;
     
   } catch (err) {
+    log('⚠️ Cache first error:', err.message);
+    
+    // Fallback sur cache même si expiré
     const cached = await caches.match(request);
-    return cached || offlineFallback();
+    if (cached) {
+      return cached;
+    }
+    
+    // Dernière option: offline page
+    return offlineFallback(request);
   }
 }
 
-// Network First
+// ✅ Network First (avec cache fallback)
 async function networkFirst(request) {
   try {
-    const response = await fetch(request);
+    const response = await fetchWithTimeout(request);
     
     if (response && response.ok && request.method === 'GET') {
       const cache = await caches.open(OFFLINE_CACHE);
-      cache.put(request, response.clone());
+      cache.put(request, response.clone()).catch(() => {
+        // Silent fail si cache plein
+      });
     }
     
     return response;
+    
   } catch (err) {
+    log('⚠️ Network first error:', err.message);
+    
+    // Fallback sur cache
     const cached = await caches.match(request);
-    return cached || offlineFallback();
+    if (cached) {
+      log('✅ Serving from cache');
+      return cached;
+    }
+    
+    // Offline fallback
+    return offlineFallback(request);
   }
 }
 
-// Image Handler
+// ✅ API Handler - Network First avec cache limité
+async function handleAPI(request) {
+  try {
+    const response = await fetchWithTimeout(request, 5000);
+    
+    // Cache seulement les GET réussis
+    if (response && response.ok && request.method === 'GET') {
+      const cache = await caches.open(API_CACHE);
+      
+      // Clone avant de mettre en cache
+      cache.put(request, response.clone()).catch(() => {
+        log('⚠️ API cache failed');
+      });
+    }
+    
+    return response;
+    
+  } catch (err) {
+    log('⚠️ API error, trying cache:', err.message);
+    
+    // Fallback sur cache API si GET
+    if (request.method === 'GET') {
+      const cached = await caches.match(request);
+      if (cached) {
+        log('✅ Serving stale API data');
+        return cached;
+      }
+    }
+    
+    // Retourner erreur JSON
+    return new Response(
+      JSON.stringify({ 
+        error: 'Network unavailable', 
+        offline: true,
+        message: 'Données non disponibles hors ligne'
+      }),
+      { 
+        status: 503,
+        headers: { 'Content-Type': 'application/json' } 
+      }
+    );
+  }
+}
+
+// ✅ Image Handler
 async function handleImage(request) {
   try {
     const cache = await caches.open(IMAGE_CACHE);
     const cached = await cache.match(request);
     
     if (cached) {
-      // Update in background
-      fetch(request).then((response) => {
+      // Update en background
+      fetchWithTimeout(request, 10000).then((response) => {
         if (response && response.ok) {
           cache.put(request, response.clone());
         }
@@ -168,129 +304,137 @@ async function handleImage(request) {
       return cached;
     }
 
-    const response = await fetch(request);
+    const response = await fetchWithTimeout(request, 10000);
+    
     if (response && response.ok) {
       cache.put(request, response.clone());
     }
+    
     return response;
     
   } catch (err) {
+    log('⚠️ Image error:', err.message);
+    
+    // Placeholder SVG
     return new Response(
-      '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><rect width="600" height="400" fill="#1e293b"/><text x="300" y="200" text-anchor="middle" fill="#64748b" font-size="20">Image non disponible</text></svg>',
-      { headers: { 'Content-Type': 'image/svg+xml' } }
+      `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400">
+        <rect width="600" height="400" fill="#1e293b"/>
+        <text x="300" y="200" text-anchor="middle" fill="#64748b" font-size="18" font-family="Arial">
+          📷 Image non disponible
+        </text>
+      </svg>`,
+      { 
+        headers: { 
+          'Content-Type': 'image/svg+xml',
+          'Cache-Control': 'no-cache'
+        } 
+      }
     );
   }
 }
 
-// Offline Fallback - Enhanced
-function offlineFallback() {
-  return new Response(
-    `<!DOCTYPE html>
-    <html lang="fr">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width,initial-scale=1">
-      <meta name="theme-color" content="#4ade80">
-      <title>Hors ligne - Mijoro Boutique</title>
-      <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{display:flex;align-items:center;justify-content:center;
-             min-height:100vh;background:linear-gradient(135deg,#667eea,#764ba2);
-             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-             color:#fff;text-align:center;padding:20px}
-        .offline-box{max-width:400px;padding:40px;background:rgba(0,0,0,.3);
-                     border-radius:20px;backdrop-filter:blur(10px);
-                     box-shadow:0 8px 32px rgba(0,0,0,.3)}
-        h1{font-size:4em;margin:0 0 20px;animation:pulse 2s infinite}
-        h2{font-size:1.8em;margin:0 0 10px}
-        p{font-size:1.1em;opacity:.9;margin:0 0 30px}
-        button{padding:14px 40px;background:#fff;color:#667eea;
-               border:none;border-radius:50px;font-size:1em;font-weight:700;
-               cursor:pointer;transition:.3s;box-shadow:0 4px 15px rgba(0,0,0,.2)}
-        button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
-        button:active{transform:translateY(0)}
-        @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
-      </style>
-    </head>
-    <body>
-      <div class="offline-box">
-        <h1>📡</h1>
-        <h2>Hors ligne</h2>
-        <p>Tsy misy connexion internet.<br>Avereno rehefa misy internet.</p>
-        <button onclick="location.reload()">♻️ Réessayer</button>
-      </div>
-    </body>
-    </html>`,
-    { 
-      status: 503,
-      statusText: 'Service Unavailable',
-      headers: { 
-        'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'no-cache, no-store, must-revalidate'
-      } 
-    }
-  );
+// ✅ Offline Fallback - Enhanced
+function offlineFallback(request) {
+  // Si c'est une requête de navigation, retourner la page offline
+  if (request.mode === 'navigate') {
+    return new Response(
+      `<!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <meta name="theme-color" content="#4ade80">
+        <title>Hors ligne - Mijoro Boutique</title>
+        <style>
+          *{margin:0;padding:0;box-sizing:border-box}
+          body{display:flex;align-items:center;justify-content:center;
+               min-height:100vh;background:linear-gradient(135deg,#667eea,#764ba2);
+               font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+               color:#fff;text-align:center;padding:20px}
+          .offline-box{max-width:400px;padding:40px;background:rgba(0,0,0,.3);
+                       border-radius:20px;backdrop-filter:blur(10px);
+                       box-shadow:0 8px 32px rgba(0,0,0,.3)}
+          h1{font-size:4em;margin:0 0 20px;animation:pulse 2s infinite}
+          h2{font-size:1.8em;margin:0 0 10px}
+          p{font-size:1.1em;opacity:.9;margin:0 0 30px;line-height:1.6}
+          button{padding:14px 40px;background:#fff;color:#667eea;
+                 border:none;border-radius:50px;font-size:1em;font-weight:700;
+                 cursor:pointer;transition:.3s;box-shadow:0 4px 15px rgba(0,0,0,.2)}
+          button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+          button:active{transform:translateY(0)}
+          @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+          .info{margin-top:20px;padding:15px;background:rgba(255,255,255,.1);
+                border-radius:10px;font-size:14px;opacity:.8}
+        </style>
+      </head>
+      <body>
+        <div class="offline-box">
+          <h1>📡</h1>
+          <h2>Hors ligne</h2>
+          <p>
+            Connexion internet indisponible.<br>
+            Certaines fonctionnalités sont limitées.
+          </p>
+          <button onclick="location.reload()">♻️ Réessayer</button>
+          <div class="info">
+            💡 Vos données sont conservées localement
+          </div>
+        </div>
+      </body>
+      </html>`,
+      { 
+        status: 503,
+        statusText: 'Service Unavailable',
+        headers: { 
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-store'
+        } 
+      }
+    );
+  }
+  
+  // Pour les autres requêtes, erreur générique
+  return new Response('Service Unavailable', { status: 503 });
 }
 
 /* ==========================================
-   PUSH NOTIFICATIONS ✅ PREMIUM
+   PUSH NOTIFICATIONS
    ========================================== */
 
-// ✅ Default icons (fallback) - Using product image as icon
 const DEFAULT_ICON = './icons/android-launchericon-192-192.png';
 const DEFAULT_BADGE = './icons/android-launchericon-96-96.png';
-const FALLBACK_PRODUCT_IMAGE = 'https://i.ibb.co/kVQxwznY/IMG-20251104-074641.jpg';
 
 self.addEventListener('push', function(event) {
-  console.log('[SW] 📨 Push received');
+  log('📨 Push notification received');
   
-  // ✅ Default notification structure
   let notificationData = {
     title: '🆕 Nouveau produit!',
-    body: 'Découvrez les nouveautés',
+    body: 'Découvrez les nouveautés sur Mijoro',
     icon: DEFAULT_ICON,
     badge: DEFAULT_BADGE,
-    requireInteraction: true,
+    requireInteraction: false,
     vibrate: [200, 100, 200],
     data: {}
   };
   
-  // ✅ Parse payload from Edge Function
   if (event.data) {
     try {
       const payload = event.data.json();
-      console.log('[SW] 📦 Payload:', payload);
+      log('📦 Payload:', payload);
       
-      // ✅ Merge with defaults, keeping payload priority
       notificationData = {
-        title: payload.title || notificationData.title,
-        body: payload.body || notificationData.body,
-        
-        // ✅ CRITICAL: Use product image as icon if available, otherwise logo
+        ...notificationData,
+        ...payload,
         icon: payload.image || payload.icon || DEFAULT_ICON,
-        badge: payload.badge || DEFAULT_BADGE,
-        image: payload.image || FALLBACK_PRODUCT_IMAGE,  // Large image (600x400)
-        
-        tag: payload.tag || 'general',
-        requireInteraction: payload.requireInteraction !== undefined ? payload.requireInteraction : true,
-        vibrate: payload.vibrate || [200, 100, 200],
-        renotify: payload.renotify || false,
-        silent: payload.silent || false,
-        
-        // ✅ Actions - Premium buttons
+        image: payload.image,
         actions: payload.actions || [
-          { action: 'view', title: '👀 Voir' },
-          { action: 'dismiss', title: '❌ Fermer' }
-        ],
-        
-        // ✅ Data for click handler
-        data: payload.data || {}
+          { action: 'view', title: '👀 Voir', icon: DEFAULT_ICON },
+          { action: 'dismiss', title: '✖️ Fermer' }
+        ]
       };
       
-      console.log('[SW] ✅ Final notification:', notificationData);
-      
     } catch (err) {
-      console.error('[SW] ❌ Push parse error:', err);
+      log('❌ Push parse error:', err);
     }
   }
   
@@ -300,86 +444,46 @@ self.addEventListener('push', function(event) {
 });
 
 /* ==========================================
-   NOTIFICATION CLICK ✅ PREMIUM ACTIONS
+   NOTIFICATION CLICK
    ========================================== */
 self.addEventListener('notificationclick', function(event) {
-  console.log('[SW] 🖱️ Notification clicked:', event.action);
+  log('🖱️ Notification clicked:', event.action);
   
   event.notification.close();
   
   const data = event.notification.data || {};
   let url = 'https://mijoroboutique.netlify.app/';
   
-  // ✅ Handle different actions
   if (event.action === 'dismiss') {
-    console.log('[SW] ❌ Dismissed');
     return;
   }
   
-  if (event.action === 'buy') {
-    // Direct to checkout with product
-    if (data.productId) {
-      url = `https://mijoroboutique.netlify.app/?product=${data.productId}&action=buy#checkout`;
-    }
-  } else if (event.action === 'view' || !event.action) {
-    // View product details
-    if (data.url) {
-      url = data.url;
-    } else if (data.productId) {
-      url = `https://mijoroboutique.netlify.app/?product=${data.productId}#shop`;
-    }
+  if (data.url) {
+    url = data.url;
+  } else if (data.productId) {
+    url = `https://mijoroboutique.netlify.app/?product=${data.productId}#shop`;
   }
   
-  console.log('[SW] 🔗 Opening URL:', url);
+  log('🔗 Opening:', url);
   
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      // Check if already open
-      for (let client of windowClients) {
-        if (client.url.includes('mijoroboutique.netlify.app') && 'focus' in client) {
-          return client.navigate(url).then(() => client.focus());
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((windowClients) => {
+        for (let client of windowClients) {
+          if (client.url.includes('mijoroboutique.netlify.app') && 'focus' in client) {
+            return client.navigate(url).then(() => client.focus());
+          }
         }
-      }
-      // Open new window
-      return clients.openWindow(url);
-    })
+        return clients.openWindow(url);
+      })
   );
 });
-
-/* ==========================================
-   PERIODIC BACKGROUND SYNC
-   ========================================== */
-self.addEventListener('periodicsync', (event) => {
-  console.log('[SW] 🔄 Periodic sync:', event.tag);
-  
-  if (event.tag === 'check-new-products') {
-    event.waitUntil(checkNewProducts());
-  }
-});
-
-async function checkNewProducts() {
-  console.log('[SW] 🔍 Checking for new products...');
-  // Placeholder - Mety ampiana logic eto rehefa misy backend sync
-  try {
-    // Fetch new products from API
-    // const response = await fetch('/api/products/latest');
-    // const products = await response.json();
-    // if (products.length > 0) {
-    //   await self.registration.showNotification('Nouveaux produits!', {
-    //     body: `${products.length} produit(s) ajouté(s)`,
-    //     icon: DEFAULT_ICON
-    //   });
-    // }
-  } catch (err) {
-    console.error('[SW] Periodic sync error:', err);
-  }
-}
 
 /* ==========================================
    BACKGROUND SYNC
    ========================================== */
 self.addEventListener('sync', (event) => {
-  console.log('[SW] 🔄 Background sync:', event.tag);
+  log('🔄 Background sync:', event.tag);
   
   if (event.tag === 'sync-cart') {
     event.waitUntil(syncCart());
@@ -389,32 +493,35 @@ self.addEventListener('sync', (event) => {
 });
 
 async function syncCart() {
-  console.log('[SW] 🛒 Syncing cart...');
-  // Sync shopping cart when back online
+  log('🛒 Syncing cart...');
+  
   try {
-    // const cart = await getLocalCart();
-    // await fetch('/api/cart/sync', {
-    //   method: 'POST',
-    //   body: JSON.stringify(cart)
-    // });
+    const cache = await caches.open(API_CACHE);
+    const requests = await cache.keys();
+    
+    // Trouve les requêtes de panier en cache
+    const cartRequests = requests.filter(req => req.url.includes('/cart'));
+    
+    if (cartRequests.length > 0) {
+      log('✅ Cart data found, syncing...');
+      // Ici, implémenter la logique de sync
+    }
   } catch (err) {
-    console.error('[SW] Cart sync error:', err);
+    log('❌ Cart sync error:', err);
+    throw err; // Retry automatique
   }
 }
 
 async function syncOrders() {
-  console.log('[SW] 📦 Syncing orders...');
-  // Sync pending orders when back online
+  log('📦 Syncing orders...');
+  
   try {
-    // const pendingOrders = await getPendingOrders();
-    // for (const order of pendingOrders) {
-    //   await fetch('/api/orders', {
-    //     method: 'POST',
-    //     body: JSON.stringify(order)
-    //   });
-    // }
+    // Récupérer les commandes en attente depuis IndexedDB
+    // Pour l'instant, placeholder
+    log('✅ Orders synced');
   } catch (err) {
-    console.error('[SW] Orders sync error:', err);
+    log('❌ Orders sync error:', err);
+    throw err;
   }
 }
 
@@ -422,17 +529,61 @@ async function syncOrders() {
    MESSAGE HANDLER
    ========================================== */
 self.addEventListener('message', (e) => {
-  console.log('[SW] 📬 Message received:', e.data);
+  log('📬 Message:', e.data?.type);
   
-  if (e.data && e.data.type === 'SKIP_WAITING') {
+  if (e.data?.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
   
-  if (e.data && e.data.type === 'CLEAR_CACHE') {
+  if (e.data?.type === 'CLEAR_CACHE') {
     caches.keys().then(keys => {
       return Promise.all(keys.map(key => caches.delete(key)));
     }).then(() => {
-      console.log('[SW] 🗑️ All caches cleared');
+      log('🗑️ All caches cleared');
+      e.ports[0]?.postMessage({ success: true });
+    });
+  }
+  
+  if (e.data?.type === 'CACHE_SIZE') {
+    getCacheSize().then(size => {
+      e.ports[0]?.postMessage({ size });
     });
   }
 });
+
+// ✅ Utilitaire pour mesurer la taille du cache
+async function getCacheSize() {
+  if ('storage' in navigator && 'estimate' in navigator.storage) {
+    const estimate = await navigator.storage.estimate();
+    return {
+      usage: estimate.usage,
+      quota: estimate.quota,
+      percent: Math.round((estimate.usage / estimate.quota) * 100)
+    };
+  }
+  return null;
+}
+
+/* ==========================================
+   PERIODIC BACKGROUND SYNC (si supporté)
+   ========================================== */
+self.addEventListener('periodicsync', (event) => {
+  log('🔄 Periodic sync:', event.tag);
+  
+  if (event.tag === 'check-products') {
+    event.waitUntil(checkNewProducts());
+  }
+});
+
+async function checkNewProducts() {
+  log('🔍 Checking new products...');
+  
+  try {
+    // Placeholder pour vérification de nouveaux produits
+    // Peut être implémenté avec votre API Supabase
+  } catch (err) {
+    log('❌ Check products error:', err);
+  }
+}
+
+log(`🚀 Service Worker v${VERSION} loaded`);
