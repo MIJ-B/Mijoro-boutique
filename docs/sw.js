@@ -473,7 +473,7 @@ self.addEventListener('notificationclick', function(event) {
   event.notification.close();
   
   const data = event.notification.data || {};
-  let url = 'https://mijoroboutique.netlify.app/';
+  let url = 'https://mij-b.github.io/Mijoro-boutique/';
   
   if (event.action === 'dismiss') {
     return;
@@ -482,7 +482,7 @@ self.addEventListener('notificationclick', function(event) {
   if (data.url) {
     url = data.url;
   } else if (data.productId) {
-    url = `https://mijoroboutique.netlify.app/?product=${data.productId}#shop`;
+    url: `https://mij-b.github.io/Mijoro-boutique/?product=${data.productId}#shop`;
   }
   
   log('🔗 Opening:', url);
@@ -491,7 +491,7 @@ self.addEventListener('notificationclick', function(event) {
     clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then((windowClients) => {
         for (let client of windowClients) {
-          if (client.url.includes('mijoroboutique.netlify.app') && 'focus' in client) {
+          if (client.url.includes('mij-b.github.io/Mijoro-boutique/') && 'focus' in client) {
             return client.navigate(url).then(() => client.focus());
           }
         }
