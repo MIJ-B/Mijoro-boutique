@@ -2,7 +2,7 @@
    SERVICE WORKER - OFFLINE MODE (FIXED)
    ========================================== */
 
-const CACHE_NAME = 'mijoro-v1.5';
+const CACHE_NAME = 'mijoro-v1.4';
 const OFFLINE_CACHE = 'mijoro-offline-v1';
 const IMAGE_CACHE = 'mijoro-images-v1';
 
@@ -59,7 +59,7 @@ self.addEventListener('activate', (e) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys
-          .filter((key) => !['mijoro-v1.5', 'mijoro-offline-v1', 'mijoro-images-v1'].includes(key))
+          .filter((key) => !['mijoro-v1.4', 'mijoro-offline-v1', 'mijoro-images-v1'].includes(key))
           .map((key) => {
             console.log('[SW] Suppression cache obsolète:', key);
             return caches.delete(key);
