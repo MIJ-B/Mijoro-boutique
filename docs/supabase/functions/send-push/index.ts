@@ -12,8 +12,8 @@ const VAPID_PUBLIC_KEY = "BL8QmGLYoAXQnhXStyuriTFZF_hsIMkHpuxwmRUaCVVRWuyRN5cICB
 const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY");
 
 // ✅ Icônes et images par défaut
-const DEFAULT_BADGE = "https://mijoroboutique.netlify.app/icons/android-launchericon-96-96.png";
-const DEFAULT_ICON = "https://mijoroboutique.netlify.app/icons/android-launchericon-192-192.png";
+const DEFAULT_BADGE = "https://mij-b.github.io/Mijoro-boutique/icons/android-launchericon-96-96.png";
+const DEFAULT_ICON = "https://mij-b.github.io/Mijoro-boutique/icons/android-launchericon-192-192.png";
 const FALLBACK_IMAGE = "https://i.ibb.co/kVQxwznY/IMG-20251104-074641.jpg";
 
 if (!VAPID_PRIVATE_KEY) {
@@ -177,7 +177,7 @@ serve(async (req) => {
         productTitle: productTitle,
         productPrice: productPrice,
         productImage: imageUrl,
-        url: `https://mijoroboutique.netlify.app/?product=${productId}#shop`,
+        url: `https://mij-b.github.io/Mijoro-boutique/?product=${productId}#shop`,
         timestamp: Date.now()
       },
       
