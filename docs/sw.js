@@ -280,28 +280,34 @@ self.addEventListener('push', function(event) {
 });
 
 /* ==========================================
-   NOTIFICATION CLICK ✅ FIXED
+   NOTIFICATION CLICK ✅ PREMIUM ACTIONS
    ========================================== */
 self.addEventListener('notificationclick', function(event) {
   console.log('[SW] 🖱️ Notification clicked:', event.action);
   
   event.notification.close();
   
-  // ✅ Handle "dismiss" action
-  if (event.action === 'dismiss') {
-    return;
-  }
-  
-  // ✅ Get URL from notification data
   const data = event.notification.data || {};
   let url = 'https://mijoroboutique.netlify.app/';
   
-  if (data.url) {
-    // ✅ Use full URL from payload
-    url = data.url;
-  } else if (data.productId) {
-    // ✅ Construct URL from productId
-    url = `https://mijoroboutique.netlify.app/?product=${data.productId}#shop`;
+  // ✅ Handle different actions
+  if (event.action === 'dismiss') {
+    console.log('[SW] ❌ Dismissed');
+    return;
+  }
+  
+  if (event.action === 'buy') {
+    // Direct to checkout with product
+    if (data.productId) {
+      url = `https://mijoroboutique.netlify.app/?product=${data.productId}&action=buy#checkout`;
+    }
+  } else if (event.action === 'view' || !event.action) {
+    // View product details
+    if (data.url) {
+      url = data.url;
+    } else if (data.productId) {
+      url = `https://mijoroboutique.netlify.app/?product=${data.productId}#shop`;
+    }
   }
   
   console.log('[SW] 🔗 Opening URL:', url);
