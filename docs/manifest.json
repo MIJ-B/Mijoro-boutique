@@ -19,7 +19,7 @@
   "icons": [
     {
       "src": "./icons/android-launchericon-72-72.png",
-      "sizes": "72x72",
+      "sizes": "72×72",
       "type": "image/png",
       "purpose": "any"
     },
@@ -31,31 +31,31 @@
     },
     {
       "src": "./icons/android-launchericon-144-144.png",
-      "sizes": "144x144",
+      "sizes": "144×144",
       "type": "image/png",
       "purpose": "any"
     },
     {
       "src": "./icons/android-launchericon-192-192.png",
-      "sizes": "192x192",
+      "sizes": "192×192",
       "type": "image/png",
       "purpose": "any"
     },
     {
       "src": "./icons/maskable_icon_x192.png",
-      "sizes": "192x192",
+      "sizes": "192×192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
       "src": "./icons/android-launchericon-512-512.png",
-      "sizes": "512x512",
+      "sizes": "512×512",
       "type": "image/png",
       "purpose": "any"
     },
     {
       "src": "./icons/maskable_icon_x512.png",
-      "sizes": "512x512",
+      "sizes": "512×512",
       "type": "image/png",
       "purpose": "maskable"
     }
@@ -96,7 +96,7 @@
       "icons": [
         {
           "src": "./icons/android-launchericon-192-192.png",
-          "sizes": "192x192",
+          "sizes": "192×192",
           "type": "image/png"
         }
       ]
@@ -109,7 +109,7 @@
       "icons": [
         {
           "src": "./icons/android-launchericon-192-192.png",
-          "sizes": "192x192",
+          "sizes": "192×192",
           "type": "image/png"
         }
       ]
@@ -135,7 +135,7 @@
       "icons": [
         {
           "src": "./icons/android-launchericon-192-192.png",
-          "sizes": "192x192",
+          "sizes": "192×192",
           "type": "image/png"
         }
       ]
@@ -190,7 +190,7 @@
       "screenshots": [
         {
           "src": "./screenshots/widget-preview.png",
-          "sizes": "400x300",
+          "sizes": "400×300",
           "label": "Widget Quick Order"
         }
       ]
@@ -208,7 +208,7 @@
       "icons": [
         {
           "src": "./icons/android-launchericon-192-192.png",
-          "sizes": "192x192"
+          "sizes": "192×192"
         }
       ]
     }
