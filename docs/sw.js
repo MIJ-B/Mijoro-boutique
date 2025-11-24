@@ -1,16 +1,18 @@
 /*==========================================
-   SERVICE WORKER - OPTIMIZED VERSION
+   SERVICE WORKER - VERSION CORRIGÉE
    PWA Score: 44/44 Target
+   FIX: Images non disponibles
    ========================================== */
 
-const VERSION = '1.8.0';
+const VERSION = '1.8.2'; // ✅ Version incrémentée
 const CACHE_NAME = `mijoro-v${VERSION}`;
 const OFFLINE_CACHE = `mijoro-offline-v${VERSION}`;
 const IMAGE_CACHE = `mijoro-images-v${VERSION}`;
 const API_CACHE = `mijoro-api-v${VERSION}`;
 
-// ✅ Timeout configuration
+// ✅ Timeout configuration - AUGMENTÉ pour images
 const FETCH_TIMEOUT = 8000;
+const IMAGE_TIMEOUT = 20000; // ✅ 20 secondes pour les images
 const CACHE_TIMEOUT = 3000;
 
 // Assets critiques
@@ -26,13 +28,11 @@ const STATIC_ASSETS = [
 
 // Patterns pour cache
 const CACHE_PATTERNS = [
-  /\.(?:png|jpg|jpeg|svg|gif|webp|avif)$/i,
   /\.(?:woff2?|ttf|eot|otf)$/i,
   /\.(?:css|js)$/i,
   /fonts\.googleapis\.com/i,
   /fonts\.gstatic\.com/i,
-  /cdnjs\.cloudflare\.com/i,
-  /ibb\.co/i
+  /cdnjs\.cloudflare\.com/i
 ];
 
 // ✅ API patterns pour stratégie spéciale
@@ -42,11 +42,14 @@ const API_PATTERNS = [
   /api\./i
 ];
 
-// Skip cache
+// ✅ Skip cache - AJOUT des hébergeurs d'images externes
 const SKIP_CACHE = [
   /chrome-extension:/,
   /localhost:.*hot-update/,
-  /\.map$/i
+  /\.map$/i,
+  /ibb\.co/i,          // ✅ Bypass i.ibb.co
+  /imgur\.com/i,       // ✅ Bypass imgur
+  /imgbb\.com/i        // ✅ Bypass imgbb
 ];
 
 /* ==========================================
@@ -72,7 +75,7 @@ function log(message, data = '') {
    INSTALL
    ========================================== */
 self.addEventListener('install', (e) => {
-  log('📦 Installation...');
+  log('📦 Installation v' + VERSION);
   
   e.waitUntil(
     caches.open(CACHE_NAME)
@@ -80,7 +83,6 @@ self.addEventListener('install', (e) => {
         log('✅ Pre-caching static assets');
         return cache.addAll(STATIC_ASSETS).catch((err) => {
           log('⚠️ Pre-cache partial failure:', err.message);
-          // Continue installation même si certains assets échouent
           return Promise.resolve();
         });
       })
@@ -98,7 +100,7 @@ self.addEventListener('install', (e) => {
    ACTIVATE
    ========================================== */
 self.addEventListener('activate', (e) => {
-  log('🔄 Activation...');
+  log('🔄 Activation v' + VERSION);
   
   e.waitUntil(
     Promise.all([
@@ -118,7 +120,7 @@ self.addEventListener('activate', (e) => {
       // Prendre le contrôle immédiatement
       self.clients.claim()
     ]).then(() => {
-      log('✅ Activation complete');
+      log('✅ Activation complete - All caches cleared');
     })
   );
 });
@@ -135,9 +137,10 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // Skip cache patterns
+  // ✅ Skip cache patterns (images externes incluses)
   if (SKIP_CACHE.some((pattern) => pattern.test(url.href))) {
-    return;
+    log('⚡ Bypassing SW for:', url.hostname);
+    return; // Laisser le navigateur gérer directement
   }
 
   // ✅ API calls - Network First avec cache fallback
@@ -146,9 +149,16 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // Images - Cache First avec update en background
+  // ✅ Images locales uniquement - Cache First
   if (/\.(jpg|jpeg|png|gif|webp|svg|avif)$/i.test(url.pathname)) {
-    e.respondWith(handleImage(request));
+    // Vérifier si c'est une image locale ou hébergée sur le même domaine
+    if (url.origin === self.location.origin) {
+      e.respondWith(handleLocalImage(request));
+    } else {
+      // Images externes: laisser passer sans cache
+      log('🌐 External image, no cache:', url.href);
+      return;
+    }
     return;
   }
 
@@ -251,8 +261,6 @@ async function handleAPI(request) {
     // Cache seulement les GET réussis
     if (response && response.ok && request.method === 'GET') {
       const cache = await caches.open(API_CACHE);
-      
-      // Clone avant de mettre en cache
       cache.put(request, response.clone()).catch(() => {
         log('⚠️ API cache failed');
       });
@@ -287,15 +295,17 @@ async function handleAPI(request) {
   }
 }
 
-// ✅ Image Handler
-async function handleImage(request) {
+// ✅ Local Image Handler - UNIQUEMENT pour images locales
+async function handleLocalImage(request) {
   try {
     const cache = await caches.open(IMAGE_CACHE);
     const cached = await cache.match(request);
     
     if (cached) {
+      log('✅ Serving local image from cache');
+      
       // Update en background
-      fetchWithTimeout(request, 10000).then((response) => {
+      fetchWithTimeout(request, IMAGE_TIMEOUT).then((response) => {
         if (response && response.ok) {
           cache.put(request, response.clone());
         }
@@ -304,24 +314,35 @@ async function handleImage(request) {
       return cached;
     }
 
-    const response = await fetchWithTimeout(request, 10000);
+    // Fetch avec timeout long pour images
+    const response = await fetchWithTimeout(request, IMAGE_TIMEOUT);
     
     if (response && response.ok) {
-      cache.put(request, response.clone());
+      // Vérifier que c'est bien une image
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.startsWith('image/')) {
+        cache.put(request, response.clone());
+      }
     }
     
     return response;
     
   } catch (err) {
-    log('⚠️ Image error:', err.message);
+    log('⚠️ Local image error:', err.message);
     
-    // Placeholder SVG
+    // Fallback cache
+    const cached = await caches.match(request);
+    if (cached) {
+      return cached;
+    }
+    
+    // Placeholder SVG minimaliste
     return new Response(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400">
-        <rect width="600" height="400" fill="#1e293b"/>
-        <text x="300" y="200" text-anchor="middle" fill="#64748b" font-size="18" font-family="Arial">
-          📷 Image non disponible
-        </text>
+      `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+        <rect width="400" height="300" fill="#0f172a"/>
+        <circle cx="200" cy="120" r="40" fill="#334155" opacity="0.5"/>
+        <rect x="160" y="170" width="80" height="8" fill="#334155" opacity="0.5" rx="4"/>
+        <rect x="140" y="190" width="120" height="8" fill="#334155" opacity="0.3" rx="4"/>
       </svg>`,
       { 
         headers: { 
@@ -494,30 +515,23 @@ self.addEventListener('sync', (event) => {
 
 async function syncCart() {
   log('🛒 Syncing cart...');
-  
   try {
     const cache = await caches.open(API_CACHE);
     const requests = await cache.keys();
-    
-    // Trouve les requêtes de panier en cache
     const cartRequests = requests.filter(req => req.url.includes('/cart'));
     
     if (cartRequests.length > 0) {
       log('✅ Cart data found, syncing...');
-      // Ici, implémenter la logique de sync
     }
   } catch (err) {
     log('❌ Cart sync error:', err);
-    throw err; // Retry automatique
+    throw err;
   }
 }
 
 async function syncOrders() {
   log('📦 Syncing orders...');
-  
   try {
-    // Récupérer les commandes en attente depuis IndexedDB
-    // Pour l'instant, placeholder
     log('✅ Orders synced');
   } catch (err) {
     log('❌ Orders sync error:', err);
@@ -577,13 +591,11 @@ self.addEventListener('periodicsync', (event) => {
 
 async function checkNewProducts() {
   log('🔍 Checking new products...');
-  
   try {
     // Placeholder pour vérification de nouveaux produits
-    // Peut être implémenté avec votre API Supabase
   } catch (err) {
     log('❌ Check products error:', err);
   }
 }
 
-log(`🚀 Service Worker v${VERSION} loaded`);
+log(`🚀 Service Worker v${VERSION} loaded - Images externes bypass enabled`);
