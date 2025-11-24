@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ==========================================
-   SERVICE WORKER REGISTRATION (OFFLINE MODE)
+   SERVICE WORKER REGISTRATION
    ========================================== */
 
 (function registerServiceWorker() {
@@ -150,16 +150,18 @@ document.addEventListener('DOMContentLoaded', () => {
   
   window.addEventListener('load', async () => {
     try {
+      // ✅ Register Service Worker
       const registration = await navigator.serviceWorker.register('./sw.js', {
-        scope: './'
+        scope: './',
+        updateViaCache: 'none'
       });
       
-      console.log('[SW] Enregistré avec succès:', registration.scope);
+      console.log('[SW] ✅ Enregistré:', registration.scope);
       
-      // Gestion des mises à jour
+      // ✅ Gestion des mises à jour
       registration.addEventListener('updatefound', () => {
         const newWorker = registration.installing;
-        console.log('[SW] Nouvelle version détectée');
+        console.log('[SW] 🔄 Nouvelle version détectée');
         
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
@@ -169,21 +171,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       });
       
-      // Auto-refresh si le SW change
+      // ✅ Auto-refresh si le SW change
       let refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (!refreshing) {
           refreshing = true;
+          console.log('[SW] ♻️ Reloading...');
           window.location.reload();
         }
       });
       
+      // ✅ Vérifier les mises à jour toutes les 30 minutes
+      setInterval(() => {
+        registration.update();
+        console.log('[SW] 🔍 Checking updates...');
+      }, 30 * 60 * 1000);
+      
     } catch (err) {
-      console.error('[SW] Erreur enregistrement:', err);
+      console.error('[SW] ❌ Erreur enregistrement:', err);
     }
   });
   
-  // Notification de mise à jour
+  // ✅ Notification de mise à jour
   function showUpdateNotification(worker) {
     const shouldUpdate = confirm(
       '🔄 Misy version vaovao!\n\nReload ilay page mba hanova?'
@@ -194,6 +203,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 })();
+
+/* ==========================================
+   PUSH NOTIFICATIONS SETUP (Optional)
+   ========================================== */
+
+// Demander permission pour notifications
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) {
+    console.warn('[Notif] ❌ Non supporté');
+    return false;
+  }
+  
+  if (Notification.permission === 'granted') {
+    console.log('[Notif] ✅ Déjà autorisé');
+    return true;
+  }
+  
+  if (Notification.permission !== 'denied') {
+    const permission = await Notification.requestPermission();
+    console.log('[Notif] 🔔 Permission:', permission);
+    return permission === 'granted';
+  }
+  
+  return false;
+}
+
+// Appeler lors du chargement (optionnel)
+// window.addEventListener('load', () => {
+//   setTimeout(() => requestNotificationPermission(), 3000);
+// });
 /* ==========================================
    PUSH NOTIFICATIONS SETUP (Optional)
    ========================================== */
