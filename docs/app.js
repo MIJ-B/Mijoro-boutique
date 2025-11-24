@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ==========================================
-   SERVICE WORKER REGISTRATION
+   SERVICE WORKER REGISTRATION (OFFLINE MODE)
    ========================================== */
 
 (function registerServiceWorker() {
@@ -150,18 +150,16 @@ document.addEventListener('DOMContentLoaded', () => {
   
   window.addEventListener('load', async () => {
     try {
-      // ✅ Register Service Worker
       const registration = await navigator.serviceWorker.register('./sw.js', {
-        scope: './',
-        updateViaCache: 'none'
+        scope: './'
       });
       
-      console.log('[SW] ✅ Enregistré:', registration.scope);
+      console.log('[SW] Enregistré avec succès:', registration.scope);
       
-      // ✅ Gestion des mises à jour
+      // Gestion des mises à jour
       registration.addEventListener('updatefound', () => {
         const newWorker = registration.installing;
-        console.log('[SW] 🔄 Nouvelle version détectée');
+        console.log('[SW] Nouvelle version détectée');
         
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
@@ -171,28 +169,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       });
       
-      // ✅ Auto-refresh si le SW change
+      // Auto-refresh si le SW change
       let refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (!refreshing) {
           refreshing = true;
-          console.log('[SW] ♻️ Reloading...');
           window.location.reload();
         }
       });
       
-      // ✅ Vérifier les mises à jour toutes les 30 minutes
-      setInterval(() => {
-        registration.update();
-        console.log('[SW] 🔍 Checking updates...');
-      }, 30 * 60 * 1000);
-      
     } catch (err) {
-      console.error('[SW] ❌ Erreur enregistrement:', err);
+      console.error('[SW] Erreur enregistrement:', err);
     }
   });
   
-  // ✅ Notification de mise à jour
+  // Notification de mise à jour
   function showUpdateNotification(worker) {
     const shouldUpdate = confirm(
       '🔄 Misy version vaovao!\n\nReload ilay page mba hanova?'
@@ -203,7 +194,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 })();
-
 /* ==========================================
    PUSH NOTIFICATIONS SETUP (Optional)
    ========================================== */
