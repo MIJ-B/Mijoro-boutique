@@ -15,6 +15,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Mijoro">
   
+  <!-- ✅ NOUVEAUX META TAGS - CAPABILITIES -->
+  <meta name="file-handler" content="enabled">
+  <meta name="file-handler-types" content="application/pdf,image/jpeg,image/png,image/webp,image/gif">
+  <link rel="protocol-handler" href="/?action=protocol&url=%s" protocol="web+mijoro">
+  <meta name="widget-support" content="enabled">
+  <meta name="widget-update-frequency" content="3600">
+  
   <!-- ✅ MANIFEST LINK -->
   <link rel="manifest" href="./manifest.json">
   
@@ -41,14 +48,21 @@
   <link rel="preconnect" href="https://i.ibb.co">
   <link rel="preconnect" href="https://zogohkfzplcuonkkfoov.supabase.co">
   <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+  
+  <!-- ✅ NOUVEAU: Preconnect Widgets -->
+  <link rel="preconnect" href="https://widget-api.pwabuilder.com" crossorigin>
+  <link rel="dns-prefetch" href="https://widget-api.pwabuilder.com">
  
-  <noscript>
-    <style>
-      #loader{ display:none !important; }
-      .bottom-nav{ display:flex !important; }
-      section{ display:block !important; }
-    </style>
-  </noscript>
+  <!-- ✅ ENHANCED NOSCRIPT FALLBACK -->
+<noscript>
+  <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;padding:20px;background:#0a0e17;border:2px solid #ef4444;border-radius:12px;max-width:400px;z-index:99999">
+    <i class="fa-solid fa-exclamation-triangle" style="font-size:48px;color:#ef4444;margin-bottom:16px"></i>
+    <h3 style="color:#fff;margin:0 0 12px">JavaScript requis</h3>
+    <p style="color:#94a3b8;margin:0;line-height:1.6">
+      Cette application nécessite JavaScript pour fonctionner correctement.
+    </p>
+  </div>
+</noscript>
   
   <!-- ✅ PWA TAGS SUPPLEMENTAIRES -->
   <meta name="format-detection" content="telephone=no">
@@ -62,7 +76,7 @@
   
   <!-- ✅ PWA INSTALL PROMPT STYLES -->
   <style>
-    /* Install prompt banner */
+    /* Install prompter */
     #pwa-install-banner {
       position: fixed;
       bottom: 80px;
@@ -152,6 +166,60 @@
       padding-bottom: env(safe-area-inset-bottom);
     }
   </style>
+  
+  <!-- ✅ NOUVEAU: STRUCTURED DATA - Deep Linking Support -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "MobileApplication",
+    "name": "Mijoro Boutique",
+    "operatingSystem": "Android, iOS, Windows",
+    "applicationCategory": "ShoppingApplication",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "MGA"
+    },
+    "potentialAction": [
+      {
+        "@type": "ViewAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "web+mijoro://product/{product_id}",
+          "actionPlatform": [
+            "http://schema.org/DesktopWebPlatform",
+            "http://schema.org/MobileWebPlatform"
+          ]
+        },
+        "name": "Voir Produit"
+      },
+      {
+        "@type": "ViewAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "web+mijoro://category/{category_name}",
+          "actionPlatform": [
+            "http://schema.org/DesktopWebPlatform",
+            "http://schema.org/MobileWebPlatform"
+          ]
+        },
+        "name": "Voir Catégorie"
+      },
+      {
+        "@type": "ViewAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "web+mijoro://cart",
+          "actionPlatform": [
+            "http://schema.org/DesktopWebPlatform",
+            "http://schema.org/MobileWebPlatform"
+          ]
+        },
+        "name": "Voir Panier"
+      }
+    ]
+  }
+  </script>
 </head>
 <body aria-busy="true">
 
@@ -194,6 +262,7 @@ LOADER PREMIUM
     </div>
   </div>
 </div>
+
 
 <!-- ========================================
      HOME SECTION
@@ -1072,11 +1141,11 @@ LOADER PREMIUM
 </div>
 <script type="text/javascript" charset="utf-8">
   
-<script>
+
 // ==========================================
 // PWA MODE DETECTION
 // ==========================================
-
+<script>
 window.addEventListener('DOMContentLoaded', () => {
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
     window.navigator.standalone ||
@@ -1086,42 +1155,77 @@ window.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 Running in PWA mode');
     document.body.classList.add('pwa-mode');
     
-    // Hide install banner if already installed
     const banner = document.getElementById('pwa-install-banner');
     if (banner) banner.style.display = 'none';
-  } else {
-    console.log('🌐 Running in browser mode');
+    
+    // ✅ Check capabilities
+    if ('launchQueue' in window) {
+      console.log('[PWA] ✅ File Handlers supported');
+    }
+    if ('registerProtocolHandler' in navigator) {
+      console.log('[PWA] ✅ Protocol Handlers supported');
+    }
+    
+    return;
   }
+  
+  console.log('🌐 Running in browser mode');
+  
+  setTimeout(() => {
+    const banner = document.getElementById('pwa-install-banner');
+    if (banner && !localStorage.getItem('pwa-dismissed')) {
+      banner.classList.add('show');
+    }
+  }, 30000);
 });
 
-// ==========================================
-// NOTIFICATION PERMISSION (Optional)
-// ==========================================
+window.installPWA = async function() {
+  if (!window.deferredPrompt) {
+    alert('Installation non disponible');
+    return;
+  }
+  
+  try {
+    await window.deferredPrompt.prompt();
+    const { outcome } = await window.deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+      document.getElementById('pwa-install-banner')?.remove();
+      setTimeout(() => {
+        alert(
+          '✅ Installation réussie!\n\n' +
+          '🎉 Fonctionnalités:\n' +
+          '• File Handlers\n' +
+          '• Deep Linking\n' +
+          '• Widgets'
+        );
+      }, 2000);
+    }
+    
+    window.deferredPrompt = null;
+  } catch (e) {
+    console.error('[PWA] Error:', e);
+  }
+};
+window.dismissPWAPrompt = function() {
+  document.getElementById('pwa-install-banner')?.remove();
+  localStorage.setItem('pwa-dismissed', 'true');
+};
 
-async function requestNotificationPermission() {
-  if (!('Notification' in window)) {
-    console.warn('❌ Notifications not supported');
-    return false;
-  }
-  
-  if (Notification.permission === 'granted') {
-    console.log('✅ Notifications already granted');
-    return true;
-  }
-  
-  if (Notification.permission !== 'denied') {
-    const permission = await Notification.requestPermission();
-    console.log('🔔 Notification permission:', permission);
-    return permission === 'granted';
-  }
-  
-  return false;
-}
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  window.deferredPrompt = e;
+  console.log('[PWA] Install prompt captured');
+});
 
-// Auto-request on PWA install (optional)
 window.addEventListener('appinstalled', () => {
+  console.log('[PWA] ✅ App installed');
+  window.deferredPrompt = null;
+  
   setTimeout(() => {
-    requestNotificationPermission();
+    if (typeof requestNotificationPermission === 'function') {
+      requestNotificationPermission();
+    }
   }, 3000);
 });
 </script>
