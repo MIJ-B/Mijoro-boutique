@@ -24,8 +24,8 @@
       "purpose": "any"
     },
     {
-      "src": "./icons/android-launchericon-96-96.png",
-      "sizes": "96x96",
+      "src": "./icons/512×512-monochrome.png",
+      "sizes": "512-512",
       "type": "image/png",
       "purpose": "monochrome"
     },
