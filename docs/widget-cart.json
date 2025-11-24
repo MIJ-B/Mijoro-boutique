@@ -1,0 +1,10 @@
+{
+  "template": "cart",
+  "data": {
+    "title": "Mon Panier",
+    "icon": "./icons/android-launchericon-192-192.png",
+    "count": 0,
+    "total": 0,
+    "items": []
+  }
+}
