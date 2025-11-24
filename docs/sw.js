@@ -423,7 +423,7 @@ function offlineFallback(request) {
    ========================================== */
 
 const DEFAULT_ICON = './icons/android-launchericon-192-192.png';
-const DEFAULT_BADGE = './icons/android-launchericon-96-96.png';
+const DEFAULT_BADGE = './icons/512×512-monochrome.png';
 
 self.addEventListener('push', function(event) {
   log('📨 Push notification received');
