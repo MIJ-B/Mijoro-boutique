@@ -16,17 +16,17 @@
   <meta name="apple-mobile-web-app-title" content="Mijoro">
   
   <!-- ✅ MANIFEST LINK -->
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="./manifest.json">
   
-  <!-- ✅ APPLE ICONS (Multiple sizes for iOS) -->
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-180.png">
-  <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
-  <link rel="apple-touch-icon" sizes="144x144" href="icons/icon-144.png">
-  <link rel="apple-touch-icon" sizes="120x120" href="icons/icon-128.png">
+  <!-- ✅ APPLE ICONS (Relative paths) -->
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/android-launchericon-192-192.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="./icons/android-launchericon-144-144.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="./icons/android-launchericon-144-144.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="./icons/android-launchericon-96-96.png">
   
   <!-- ✅ FAVICON -->
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/android-launchericon-192-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="./icons/android-launchericon-512-512.png">
 
   <!-- Fonts & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -49,6 +49,16 @@
       section{ display:block !important; }
     </style>
   </noscript>
+  
+  <!-- ✅ PWA TAGS SUPPLEMENTAIRES -->
+  <meta name="format-detection" content="telephone=no">
+  <meta name="msapplication-tap-highlight" content="no">
+  <meta name="application-name" content="Mijoro">
+  <meta name="msapplication-TileColor" content="#0a0e17">
+  <meta name="msapplication-TileImage" content="./icons/android-launchericon-144-144.png">
+
+  <!-- ✅ iOS SPLASH SCREENS -->
+  <link rel="apple-touch-startup-image" href="./icons/android-launchericon-512-512.png">
   
   <!-- ✅ PWA INSTALL PROMPT STYLES -->
   <style>
@@ -161,8 +171,8 @@
 </div>
 
 <!-- ========================================
-     LOADER PREMIUM
-     ======================================== -->
+LOADER PREMIUM
+======================================== -->
 <div id="loader" aria-hidden="false" role="status" aria-label="Chargement">
   <div class="loader-container">
     <div class="icon-wrapper">
