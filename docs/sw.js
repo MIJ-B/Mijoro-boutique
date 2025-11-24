@@ -1,8 +1,8 @@
 /*==========================================
-   SERVICE WORKER - OFFLINE MODE (FIXED)
+   SERVICE WORKER - OFFLINE MODE + PREMIUM NOTIFICATIONS
    ========================================== */
 
-const CACHE_NAME = 'mijoro-v1.4';
+const CACHE_NAME = 'mijoro-v1.7';
 const OFFLINE_CACHE = 'mijoro-offline-v1';
 const IMAGE_CACHE = 'mijoro-images-v1';
 
@@ -59,7 +59,7 @@ self.addEventListener('activate', (e) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys
-          .filter((key) => !['mijoro-v1.4', 'mijoro-offline-v1', 'mijoro-images-v1'].includes(key))
+          .filter((key) => !['mijoro-v1.7', 'mijoro-offline-v1', 'mijoro-images-v1'].includes(key))
           .map((key) => {
             console.log('[SW] Suppression cache obsolète:', key);
             return caches.delete(key);
@@ -182,7 +182,7 @@ async function handleImage(request) {
   }
 }
 
-// Offline Fallback
+// Offline Fallback - Enhanced
 function offlineFallback() {
   return new Response(
     `<!DOCTYPE html>
@@ -190,33 +190,50 @@ function offlineFallback() {
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
-      <title>Hors ligne</title>
+      <meta name="theme-color" content="#4ade80">
+      <title>Hors ligne - Mijoro Boutique</title>
       <style>
-        body{margin:0;padding:0;display:flex;align-items:center;justify-content:center;
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{display:flex;align-items:center;justify-content:center;
              min-height:100vh;background:linear-gradient(135deg,#667eea,#764ba2);
-             font-family:system-ui,sans-serif;color:#fff;text-align:center}
-        .offline-box{padding:40px;background:rgba(0,0,0,.3);border-radius:20px;
-                     backdrop-filter:blur(10px);max-width:400px}
-        h1{font-size:3em;margin:0 0 20px}
-        button{margin-top:24px;padding:12px 32px;background:#fff;color:#667eea;
-               border:none;border-radius:999px;font-weight:700;cursor:pointer}
+             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+             color:#fff;text-align:center;padding:20px}
+        .offline-box{max-width:400px;padding:40px;background:rgba(0,0,0,.3);
+                     border-radius:20px;backdrop-filter:blur(10px);
+                     box-shadow:0 8px 32px rgba(0,0,0,.3)}
+        h1{font-size:4em;margin:0 0 20px;animation:pulse 2s infinite}
+        h2{font-size:1.8em;margin:0 0 10px}
+        p{font-size:1.1em;opacity:.9;margin:0 0 30px}
+        button{padding:14px 40px;background:#fff;color:#667eea;
+               border:none;border-radius:50px;font-size:1em;font-weight:700;
+               cursor:pointer;transition:.3s;box-shadow:0 4px 15px rgba(0,0,0,.2)}
+        button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+        button:active{transform:translateY(0)}
+        @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
       </style>
     </head>
     <body>
       <div class="offline-box">
         <h1>📡</h1>
         <h2>Hors ligne</h2>
-        <p>Tsy misy connexion. Avereno rehefa misy internet.</p>
-        <button onclick="location.reload()">♻️ Reload</button>
+        <p>Tsy misy connexion internet.<br>Avereno rehefa misy internet.</p>
+        <button onclick="location.reload()">♻️ Réessayer</button>
       </div>
     </body>
     </html>`,
-    { headers: { 'Content-Type': 'text/html' } }
+    { 
+      status: 503,
+      statusText: 'Service Unavailable',
+      headers: { 
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-cache, no-store, must-revalidate'
+      } 
+    }
   );
 }
 
 /* ==========================================
-   PUSH NOTIFICATIONS ✅ FIXED
+   PUSH NOTIFICATIONS ✅ PREMIUM
    ========================================== */
 
 // ✅ Default icons (fallback) - Using product image as icon
@@ -231,8 +248,8 @@ self.addEventListener('push', function(event) {
   let notificationData = {
     title: '🆕 Nouveau produit!',
     body: 'Découvrez les nouveautés',
-    icon: DEFAULT_ICON,      // Logo Mijoro
-    badge: DEFAULT_BADGE,    // Badge Mijoro
+    icon: DEFAULT_ICON,
+    badge: DEFAULT_BADGE,
     requireInteraction: true,
     vibrate: [200, 100, 200],
     data: {}
@@ -260,8 +277,11 @@ self.addEventListener('push', function(event) {
         renotify: payload.renotify || false,
         silent: payload.silent || false,
         
-        // ✅ Actions
-        actions: payload.actions || [],
+        // ✅ Actions - Premium buttons
+        actions: payload.actions || [
+          { action: 'view', title: '👀 Voir' },
+          { action: 'dismiss', title: '❌ Fermer' }
+        ],
         
         // ✅ Data for click handler
         data: payload.data || {}
@@ -327,10 +347,92 @@ self.addEventListener('notificationclick', function(event) {
 });
 
 /* ==========================================
+   PERIODIC BACKGROUND SYNC
+   ========================================== */
+self.addEventListener('periodicsync', (event) => {
+  console.log('[SW] 🔄 Periodic sync:', event.tag);
+  
+  if (event.tag === 'check-new-products') {
+    event.waitUntil(checkNewProducts());
+  }
+});
+
+async function checkNewProducts() {
+  console.log('[SW] 🔍 Checking for new products...');
+  // Placeholder - Mety ampiana logic eto rehefa misy backend sync
+  try {
+    // Fetch new products from API
+    // const response = await fetch('/api/products/latest');
+    // const products = await response.json();
+    // if (products.length > 0) {
+    //   await self.registration.showNotification('Nouveaux produits!', {
+    //     body: `${products.length} produit(s) ajouté(s)`,
+    //     icon: DEFAULT_ICON
+    //   });
+    // }
+  } catch (err) {
+    console.error('[SW] Periodic sync error:', err);
+  }
+}
+
+/* ==========================================
+   BACKGROUND SYNC
+   ========================================== */
+self.addEventListener('sync', (event) => {
+  console.log('[SW] 🔄 Background sync:', event.tag);
+  
+  if (event.tag === 'sync-cart') {
+    event.waitUntil(syncCart());
+  } else if (event.tag === 'sync-orders') {
+    event.waitUntil(syncOrders());
+  }
+});
+
+async function syncCart() {
+  console.log('[SW] 🛒 Syncing cart...');
+  // Sync shopping cart when back online
+  try {
+    // const cart = await getLocalCart();
+    // await fetch('/api/cart/sync', {
+    //   method: 'POST',
+    //   body: JSON.stringify(cart)
+    // });
+  } catch (err) {
+    console.error('[SW] Cart sync error:', err);
+  }
+}
+
+async function syncOrders() {
+  console.log('[SW] 📦 Syncing orders...');
+  // Sync pending orders when back online
+  try {
+    // const pendingOrders = await getPendingOrders();
+    // for (const order of pendingOrders) {
+    //   await fetch('/api/orders', {
+    //     method: 'POST',
+    //     body: JSON.stringify(order)
+    //   });
+    // }
+  } catch (err) {
+    console.error('[SW] Orders sync error:', err);
+  }
+}
+
+/* ==========================================
    MESSAGE HANDLER
    ========================================== */
 self.addEventListener('message', (e) => {
+  console.log('[SW] 📬 Message received:', e.data);
+  
   if (e.data && e.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
+  }
+  
+  if (e.data && e.data.type === 'CLEAR_CACHE') {
+    caches.keys().then(keys => {
+      return Promise.all(keys.map(key => caches.delete(key)));
+    }).then(() => {
+      console.log('[SW] 🗑️ All caches cleared');
+    });
   }
 });
