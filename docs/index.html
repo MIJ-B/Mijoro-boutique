@@ -1170,27 +1170,7 @@ window.addEventListener('appinstalled', () => {
 </script>
 
 <div class="touch-edge-bottom" aria-hidden="true"></div>
-<script>
-// ✅ FORCE CLEAR SERVICE WORKER (ONE TIME)
-(async function clearSW() {
-  if ('serviceWorker' in navigator) {
-    const regs = await navigator.serviceWorker.getRegistrations();
-    for (let reg of regs) {
-      await reg.unregister();
-      console.log('🗑️ SW cleared:', reg.scope);
-    }
-    
-    const caches = await window.caches.keys();
-    for (let cache of caches) {
-      await window.caches.delete(cache);
-      console.log('🗑️ Cache cleared:', cache);
-    }
-    
-    console.log('✅ Full reset done!');
-    setTimeout(() => location.reload(), 1000);
-  }
-})();
-</script>
+
 
 <!-- App bundle -->
 <script src="app.js" defer></script>
