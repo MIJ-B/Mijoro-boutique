@@ -137,30 +137,7 @@ async function diagSupabase() {
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(diagSupabase, 1000);
 });
-/* ==========================================
-   🗑️ FORCE CLEAR (ONE TIME ONLY!)
-   ========================================== */
 
-(async function forceUpdate() {
-  if ('serviceWorker' in navigator) {
-    // Unregister all
-    const regs = await navigator.serviceWorker.getRegistrations();
-    for (let reg of regs) {
-      await reg.unregister();
-      console.log('🗑️ Removed:', reg.scope);
-    }
-    
-    // Clear all caches
-    const cacheNames = await caches.keys();
-    for (let name of cacheNames) {
-      await caches.delete(name);
-      console.log('🗑️ Cache cleared:', name);
-    }
-    
-    console.log('✅ Full reset done! Reloading...');
-    setTimeout(() => location.reload(), 1000);
-  }
-})();
 /* ==========================================
    SERVICE WORKER REGISTRATION
    ========================================== */
