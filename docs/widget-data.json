@@ -1,0 +1,10 @@
+{
+  "template": "quick-order",
+  "data": {
+    "title": "Quick Order",
+    "subtitle": "Produits favoris",
+    "icon": "./icons/android-launchericon-192-192.png",
+    "items": 0,
+    "products": []
+  }
+}
