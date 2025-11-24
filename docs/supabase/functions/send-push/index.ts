@@ -9,46 +9,101 @@ const corsHeaders = {
 
 // ✅ VAPID Keys
 const VAPID_PUBLIC_KEY = "BL8QmGLYoAXQnhXStyuriTFZF_hsIMkHpuxwmRUaCVVRWuyRN5cICB8smSeorTEGQ-3welHD9lFHDma7b--l5Ic";
-const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY") || "";
+const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY");
+
+// ✅ Icônes et images par défaut
+const DEFAULT_BADGE = "https://mijoroboutique.netlify.app/icons/android-launchericon-96-96.png";
+const DEFAULT_ICON = "https://mijoroboutique.netlify.app/icons/android-launchericon-192-192.png";
+const FALLBACK_IMAGE = "https://i.ibb.co/kVQxwznY/IMG-20251104-074641.jpg";
+
+if (!VAPID_PRIVATE_KEY) {
+  console.error('❌ VAPID_PRIVATE_KEY is not set in environment variables');
+  throw new Error('VAPID_PRIVATE_KEY manquante');
+}
 
 serve(async (req) => {
-  // ✅ Handle CORS preflight
+  // ==========================================
+  // CORS Preflight
+  // ==========================================
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // ==========================================
+  // ⚠️ NO AUTH CHECK (Development/Test Mode)
+  // ==========================================
+  console.log('[Send Push] ⚠️ Running without authentication check');
+
   try {
-    console.log('[Send Push] 📨 Request received');
+    console.log('[Send Push] 📨 ===== REQUEST START =====');
+    console.log('[Send Push] Method:', req.method);
+    console.log('[Send Push] URL:', req.url);
     
-    // ✅ Parse request body avec image
-    const { 
-      productId, 
-      productTitle, 
-      productPrice, 
+    // ==========================================
+    // PARSE REQUEST BODY
+    // ==========================================
+    const body = await req.json();
+    const {
+      productId,
+      productTitle,
+      productPrice,
       productType,
-      productImage  // ✅ NOUVEAU: URL de l'image
-    } = await req.json();
+      thumbnail,
+      productImage,
+      thumbnail_url
+    } = body;
     
-    console.log('[Send Push] Product:', {
-      id: productId,
-      title: productTitle,
-      price: productPrice,
-      type: productType || 'numeric',
-      image: productImage || 'no image'
-    });
+    console.log('[Send Push] 📦 Body received:', JSON.stringify(body, null, 2));
     
-    if (!productTitle) {
-      throw new Error('Missing productTitle');
+    // ==========================================
+    // VALIDATION
+    // ==========================================
+    if (!productTitle || productTitle.trim() === '') {
+      throw new Error('Missing or empty productTitle');
     }
     
-    // ✅ Setup web-push with VAPID
+    if (!productId) {
+      throw new Error('Missing productId');
+    }
+    
+    if (productPrice === undefined || productPrice === null) {
+      throw new Error('Missing productPrice');
+    }
+    
+    // ==========================================
+    // IMAGE SELECTION (Priority: productImage > thumbnail > thumbnail_url > fallback)
+    // ==========================================
+    let imageUrl = FALLBACK_IMAGE;
+    let imageSource = 'fallback';
+    
+    if (productImage && productImage.startsWith('http')) {
+      imageUrl = productImage;
+      imageSource = 'productImage';
+    } else if (thumbnail && thumbnail.startsWith('http')) {
+      imageUrl = thumbnail;
+      imageSource = 'thumbnail';
+    } else if (thumbnail_url && thumbnail_url.startsWith('http')) {
+      imageUrl = thumbnail_url;
+      imageSource = 'thumbnail_url';
+    }
+    
+    console.log('[Send Push] 🖼️ Image selection:');
+    console.log('[Send Push]   Source:', imageSource);
+    console.log('[Send Push]   URL:', imageUrl);
+    console.log('[Send Push]   Custom:', imageUrl !== FALLBACK_IMAGE ? '✅' : '❌');
+    
+    // ==========================================
+    // SETUP WEB-PUSH
+    // ==========================================
     webpush.setVapidDetails(
       'mailto:joroandriamanirisoa13@gmail.com',
       VAPID_PUBLIC_KEY,
       VAPID_PRIVATE_KEY
     );
     
-    // ✅ Connect to Supabase
+    // ==========================================
+    // CONNECT TO SUPABASE
+    // ==========================================
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
@@ -58,7 +113,11 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    // ✅ Fetch ACTIVE subscriptions only
+    // ==========================================
+    // FETCH ACTIVE SUBSCRIPTIONS
+    // ==========================================
+    console.log('[Send Push] 📡 Fetching subscriptions...');
+    
     const { data: subscriptions, error: fetchError } = await supabase
       .from('push_subscriptions')
       .select('*')
@@ -79,60 +138,74 @@ serve(async (req) => {
           total: 0,
           message: 'No active subscribers' 
         }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200
+        }
       );
     }
     
-    // ✅ Build notification avec IMAGE
+    // ==========================================
+    // BUILD NOTIFICATION PAYLOAD
+    // ==========================================
     const type = productType || 'numeric';
     const emoji = type === 'physical' ? '📦' : '💻';
-    const typeLabel = type === 'physical' ? 'produit physique' : 'produit numérique';
-    const priceText = productPrice > 0 ? `${productPrice.toLocaleString('fr-FR')} AR` : 'Gratuit';
-    
-    // ✅ Image: Utilise l'image du produit ou fallback
-    const imageUrl = productImage || 'https://i.ibb.co/kVQxwznY/IMG-20251104-074641.jpg';
+    const priceText = productPrice > 0 
+      ? `${productPrice.toLocaleString('fr-FR')} AR` 
+      : 'Gratuit';
     
     const notificationPayload = {
-      title: `${emoji} Nouveau produit disponible!`,
+      title: `${emoji} Nouveau produit!`,
       body: `${productTitle}\n💰 ${priceText}`,
       
-      // ✅ IMAGE DU PRODUIT (grande image)
-      image: imageUrl,
+      // ✅ IMAGES
+      image: imageUrl,              // Grande image (600x400px)
+      icon: DEFAULT_ICON,           // Logo Mijoro fixe (192x192px)
+      badge: DEFAULT_BADGE,         // Badge app (96x96px) - Logo Mijoro
       
-      // ✅ ICON (petite icône logo)
-      icon: 'https://i.ibb.co/kVQxwznY/IMG-20251104-074641.jpg',
-      
-      // ✅ BADGE (très petite icône)
-      badge: 'https://i.ibb.co/kVQxwznY/IMG-20251104-074641.jpg',
-      
+      // ✅ METADATA
       tag: 'new-product-' + productId,
       requireInteraction: true,
       vibrate: [200, 100, 200],
       renotify: true,
+      silent: false,
       
+      // ✅ DATA
       data: {
         productId: productId,
         productType: type,
         productTitle: productTitle,
         productPrice: productPrice,
         productImage: imageUrl,
-        url: '/?product=' + productId + '#shop'
+        url: `https://mijoroboutique.netlify.app/?product=${productId}#shop`,
+        timestamp: Date.now()
       },
       
+      // ✅ ACTIONS
       actions: [
-        { action: 'view', title: '👀 Voir le produit', icon: imageUrl },
-        { action: 'dismiss', title: '✖ Fermer' }
+        { 
+          action: 'view', 
+          title: '👀 Voir',
+          icon: DEFAULT_ICON
+        },
+        { 
+          action: 'dismiss', 
+          title: '✖ Fermer'
+        }
       ]
     };
     
-    console.log('[Send Push] 📢 Notification with image:', {
-      title: notificationPayload.title,
-      body: notificationPayload.body,
-      image: imageUrl,
-      type: type
-    });
+    console.log('[Send Push] 📢 Notification payload:');
+    console.log('[Send Push]   Title:', notificationPayload.title);
+    console.log('[Send Push]   Body:', notificationPayload.body);
+    console.log('[Send Push]   Image:', imageUrl);
+    console.log('[Send Push]   Badge:', DEFAULT_BADGE);
     
-    // ✅ Send notifications with web-push
+    // ==========================================
+    // SEND NOTIFICATIONS
+    // ==========================================
+    console.log('[Send Push] 📤 Sending notifications...');
+    
     let sent = 0;
     let failed = 0;
     let deactivated = 0;
@@ -140,7 +213,6 @@ serve(async (req) => {
     const results = await Promise.allSettled(
       subscriptions.map(async (sub) => {
         try {
-          // ✅ Parse subscription object
           const pushSubscription = {
             endpoint: sub.endpoint,
             keys: {
@@ -149,26 +221,35 @@ serve(async (req) => {
             }
           };
           
-          // ✅ Send notification
           await webpush.sendNotification(
             pushSubscription,
             JSON.stringify(notificationPayload),
             {
-              // ✅ Options pour supporter les images
-              TTL: 86400, // 24 heures
-              urgency: 'high'
+              TTL: 86400,        // 24 heures
+              urgency: 'high',
+              topic: 'new-product'
             }
           );
           
           sent++;
           console.log('[Send Push] ✅ Sent to:', sub.endpoint.substring(0, 60) + '...');
+          
+          // Update last_notification_at
+          await supabase
+            .from('push_subscriptions')
+            .update({ 
+              last_notification_at: new Date().toISOString(),
+              notifications_sent: (sub.notifications_sent || 0) + 1
+            })
+            .eq('endpoint', sub.endpoint);
+          
           return { success: true, endpoint: sub.endpoint };
           
         } catch (err: any) {
           failed++;
-          console.error('[Send Push] ❌ Failed for:', sub.endpoint.substring(0, 60), err.message);
+          console.error('[Send Push] ❌ Failed:', sub.endpoint.substring(0, 60), err.message);
           
-          // ✅ Deactivate invalid/expired subscriptions
+          // Deactivate on permanent errors
           if (err.statusCode === 404 || err.statusCode === 410 || err.statusCode === 401) {
             try {
               await supabase
@@ -193,15 +274,22 @@ serve(async (req) => {
       })
     );
     
-    // ✅ Summary
-    console.log('[Send Push] 📊 Summary:');
-    console.log('  ✅ Sent:', sent);
-    console.log('  ❌ Failed:', failed);
-    console.log('  🗑️ Deactivated:', deactivated);
-    console.log('  📊 Total:', subscriptions.length);
-    console.log('  🖼️ Image:', imageUrl);
+    // ==========================================
+    // SUMMARY
+    // ==========================================
+    console.log('[Send Push] 📊 ===== SUMMARY =====');
+    console.log('[Send Push] ✅ Sent:', sent, '/', subscriptions.length);
+    console.log('[Send Push] ❌ Failed:', failed);
+    console.log('[Send Push] 🗑️ Deactivated:', deactivated);
+    console.log('[Send Push] 🖼️ Image:', imageUrl);
+    console.log('[Send Push] ✨ Custom:', imageUrl !== FALLBACK_IMAGE ? 'YES' : 'NO');
+    console.log('[Send Push] 📦 Type:', type);
+    console.log('[Send Push] 💰 Price:', priceText);
+    console.log('[Send Push] ===== END =====');
     
-    // ✅ Return response
+    // ==========================================
+    // RESPONSE
+    // ==========================================
     return new Response(
       JSON.stringify({
         success: true,
@@ -209,9 +297,24 @@ serve(async (req) => {
         failed: failed,
         deactivated: deactivated,
         total: subscriptions.length,
-        productType: type,
-        productImage: imageUrl,
-        message: `Notification ${emoji} ${typeLabel} avec image envoyée à ${sent} abonné(s)`,
+        
+        product: {
+          id: productId,
+          title: productTitle,
+          price: productPrice,
+          type: type,
+          emoji: emoji
+        },
+        
+        notification: {
+          image: imageUrl,
+          imageSource: imageSource,
+          usedCustomImage: imageUrl !== FALLBACK_IMAGE,
+          badge: DEFAULT_BADGE
+        },
+        
+        message: `${emoji} Envoyé à ${sent}/${subscriptions.length} abonné(s)`,
+        
         details: results.map(r => ({
           status: r.status,
           value: r.status === 'fulfilled' ? r.value : r.reason
@@ -224,14 +327,16 @@ serve(async (req) => {
     );
     
   } catch (error: any) {
-    console.error('[Send Push] 💥 Critical error:', error);
-    console.error('Stack:', error.stack);
+    console.error('[Send Push] 💥 ===== CRITICAL ERROR =====');
+    console.error('[Send Push] Message:', error.message);
+    console.error('[Send Push] Stack:', error.stack);
     
     return new Response(
       JSON.stringify({ 
         success: false,
         error: error.message,
-        stack: error.stack 
+        stack: error.stack,
+        timestamp: new Date().toISOString()
       }),
       { 
         status: 500, 
