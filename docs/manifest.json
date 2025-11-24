@@ -4,6 +4,7 @@
   "description": "Boutique en ligne malagasy - eBooks, formations vidéo, applications et produits physiques. Livraison rapide Madagascar.",
   "lang": "fr-MG",
   "dir": "ltr",
+  
   "start_url": "./?source=pwa",
   "scope": "./",
   "id": "./?source=pwa",
@@ -142,5 +143,20 @@
   ],
   
   "prefer_related_applications": false,
-  "related_applications": []
+  "related_applications": [],
+  
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  
+  "share_target": {
+    "action": "./share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
 }
