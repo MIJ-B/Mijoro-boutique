@@ -24,8 +24,8 @@
       "purpose": "any"
     },
     {
-      "src": "./icons/512×512-monochrome.png",
-      "sizes": "512-512",
+      "src": "./icons/512x512-monochrome.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "monochrome"
     },
