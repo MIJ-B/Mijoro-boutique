@@ -3649,2079 +3649,6 @@ body.theme-switching * {
     max-height: 100vh !important;
   }
 }/* ==========================================
-   MIORA AI ASSISTANT - FULL SCREEN MOBILE ✅
-   ========================================== */
-
-/* Chat Window - FULL SCREEN MOBILE */
-.miora-chat {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  display: flex;
-  flex-direction: column;
-  z-index: 10000; /* ← Plus haut que tout */
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-}
-
-.miora-chat[aria-hidden="false"] {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* Header */
-.miora-header {
-  display: flex;
-  align-items: center;
-  padding: 16px;
-  padding-top: max(16px, env(safe-area-inset-top)); /* iOS notch */
-  background: rgba(15, 23, 42, 0.8);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  gap: 12px;
-  flex-shrink: 0;
-}
-
-.miora-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 2px solid #667eea;
-  flex-shrink: 0;
-}
-
-.miora-header-avatar {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.miora-title {
-  flex: 1;
-}
-
-.miora-name {
-  font-size: 18px;
-  font-weight: 700;
-  color: #fff;
-  margin-bottom: 2px;
-}
-
-.miora-status {
-  font-size: 12px;
-  color: #10b981;
-}
-
-.miora-close {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-  font-size: 20px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
-
-.miora-close:hover {
-  background: #ef4444;
-  color: #fff;
-}
-
-/* Messages Container - SCROLLABLE */
-.miora-messages {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  -webkit-overflow-scrolling: touch; /* iOS smooth scroll */
-}
-
-/* Message */
-.miora-message {
-  display: flex;
-  gap: 12px;
-  animation: messageSlide 0.3s ease;
-}
-
-@keyframes messageSlide {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.miora-message-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  overflow: hidden;
-  flex-shrink: 0;
-  background: #667eea;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 18px;
-}
-
-.miora-msg-avatar {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.miora-message-content {
-  flex: 1;
-  max-width: 80%;
-}
-
-.miora-message-text {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 12px 16px;
-  border-radius: 16px;
-  color: #e2e8f0;
-  line-height: 1.6;
-  word-wrap: break-word;
-}
-
-/* User message - right aligned */
-.miora-user {
-  flex-direction: row-reverse;
-}
-
-.miora-user .miora-message-content {
-  margin-left: auto;
-}
-
-.miora-user .miora-message-text {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: #fff;
-}
-
-/* ✅ IMAGE IN MESSAGE */
-.miora-message-image {
-  margin-top: 8px;
-  max-width: 100%;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.miora-message-image img {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 8px;
-}
-
-/* Typing indicator */
-.miora-typing {
-  display: flex;
-  gap: 4px;
-}
-
-.miora-typing span {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #64748b;
-  animation: typing 1.4s infinite;
-}
-
-.miora-typing span:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.miora-typing span:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
-@keyframes typing {
-  0%, 60%, 100% {
-    transform: translateY(0);
-  }
-  30% {
-    transform: translateY(-10px);
-  }
-}
-
-
-
-/* ✅ INPUT AREA - FIXED BOTTOM */
-.miora-input-area {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  padding: 12px 15px;
-  background: #1a1a2e;
-  border-top: 1px solid rgba(138, 43, 226, 0.3);
-  margin-top: 10px;
-}
-
-
-
-
-.miora-send {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  border: none;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: #fff;
-  font-size: 18px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
-
-.miora-send:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.miora-send:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* ✅ IMAGE PREVIEW */
-.miora-image-preview {
-  padding: 12px 16px;
-  background: rgba(15, 23, 42, 0.8);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  display: none;
-  flex-shrink: 0;
-}
-
-.miora-image-preview.show {
-  display: block;
-}
-
-.miora-preview-container {
-  position: relative;
-  display: inline-block;
-}
-
-.miora-preview-img {
-  max-width: 150px;
-  max-height: 150px;
-  border-radius: 8px;
-  display: block;
-}
-
-.miora-preview-remove {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: #ef4444;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-}
-
-/* ==========================================
-   DESKTOP (OPTIONAL)
-   ========================================== */
-@media (min-width: 768px) {
-  .miora-chat {
-    position: fixed;
-    bottom: calc(var(--bottom-menu-h, 74px) + 20px);
-    left: 50%;
-    transform: translateX(-50%);
-    width: 420px;
-    height: 650px;
-    max-height: calc(100vh - 200px);
-    border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-    top: auto;
-    right: auto;
-  }
-  
-  .miora-chat[aria-hidden="false"] {
-    animation: slideUp 0.3s ease;
-  }
-  
-  @keyframes slideUp {
-    from {
-      transform: translate(-50%, 20px);
-      opacity: 0;
-    }
-    to {
-      transform: translate(-50%, 0);
-      opacity: 1;
-    }
-  }
-}
-/* ==========================================
-   FIX: Isolation des sections fixed
-   ========================================== */
-
-/* Empêche les touch events de traverser */
-#home,
-#shop,
-#params {
-  position: fixed;
-  inset: 0;
-  touch-action: pan-y !important; /* Autorise scroll vertical uniquement */
-  isolation: isolate; /* Isole le stacking context */
-}
-
-/* Cache les sections inactives */
-section:not(.active) {
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  z-index: -1 !important;
-}
-
-section.active {
-  visibility: visible !important;
-  opacity: 1 !important;
-  pointer-events: auto !important;
-  z-index: 1 !important;
-}
-
-/* Home content scrollable */
-#home-content {
-  position: relative;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain; /* Empêche le scroll de déborder */
-  touch-action: pan-y; /* Scroll vertical uniquement */
-}
-
-/* Shop wrapper scrollable */
-#products-wrapper {
-  overscroll-behavior: contain;
-  touch-action: pan-y;
-}
-
-/* Background body ne doit pas interférer */
-body {
-  touch-action: pan-y;
-  overflow: hidden;
-}
-
-body::before,
-body::after {
-  pointer-events: none !important;
-  touch-action: none !important;
-}/* Transitions douces entre sections */
-section {
-  transition: 
-    opacity 0.3s ease,
-    visibility 0.3s ease,
-    z-index 0s linear 0.3s; /* z-index change après la transition */
-}
-
-section.active {
-  transition: 
-    opacity 0.3s ease,
-    visibility 0s ease,
-    z-index 0s linear 0s; /* z-index change immédiatement */
-}
-
-.miora-mic-btn {
-  width: 40px;
-  height: 40px;
-  border: none;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-}
-
-.miora-mic-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.miora-mic-btn.listening {
-  animation: pulse 1s infinite;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-}
-
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-}
-
-.miora-export-btn,
-.miora-clear-btn {
-  width: 36px;
-  height: 36px;
-  border: none;
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-}
-
-.miora-export-btn:hover {
-  background: rgba(16, 185, 129, 0.2);
-  color: #10b981;
-}
-
-.miora-clear-btn:hover {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-}
-
-.miora-message-actions {
-  display: flex;
-  gap: 6px;
-  margin-top: 8px;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.miora-message:hover .miora-message-actions {
-  opacity: 1;
-}
-
-.msg-action-btn {
-  padding: 4px 10px;
-  border: none;
-  background: rgba(255, 255, 255, 0.08);
-  color: #94a3b8;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 12px;
-  transition: all 0.2s ease;
-}
-
-.msg-action-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
-}
-
-.msg-action-btn:active {
-  transform: scale(0.95);
-}
-
-.miora-message-image {
-  margin-top: 12px;
-  border-radius: 12px;
-  overflow: hidden;
-  max-width: 100%;
-  cursor: pointer;
-}
-
-.miora-message-image img {
-  width: 100%;
-  height: auto;
-  display: block;
-  transition: transform 0.2s ease;
-}
-
-.miora-message-image img:hover {
-  transform: scale(1.02);
-}
-
-.miora-image-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.9);
-  z-index: 10000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.miora-image-viewer {
-  position: relative;
-  max-width: 90%;
-  max-height: 90%;
-}
-
-.miora-image-viewer img {
-  max-width: 100%;
-  max-height: 90vh;
-  border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-}
-
-.miora-image-close {
-  position: absolute;
-  top: -40px;
-  right: 0;
-  width: 40px;
-  height: 40px;
-  border: none;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 18px;
-  transition: all 0.2s ease;
-}
-
-.miora-image-close:hover {
-  background: rgba(239, 68, 68, 0.8);
-  transform: rotate(90deg);
-}
-
-.miora-typing {
-  display: inline-flex;
-  gap: 4px;
-}
-
-.miora-typing span {
-  width: 8px;
-  height: 8px;
-  background: #667eea;
-  border-radius: 50%;
-  animation: bounce 1.4s infinite ease-in-out;
-}
-
-.miora-typing span:nth-child(1) {
-  animation-delay: -0.32s;
-}
-
-.miora-typing span:nth-child(2) {
-  animation-delay: -0.16s;
-}
-
-@keyframes bounce {
-  0%, 80%, 100% {
-    transform: scale(0);
-    opacity: 0.5;
-  }
-  40% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.miora-notification {
-  animation: slideInRight 0.3s ease;
-}
-
-@keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slideOutRight {
-  from {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-}
-
-.miora-message-text ul {
-  margin: 8px 0;
-  padding-left: 20px;
-}
-
-.miora-message-text li {
-  margin: 4px 0;
-  line-height: 1.6;
-}
-
-.miora-message-text code {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-family: 'Courier New', monospace;
-  font-size: 0.9em;
-}
-
-.miora-message-text strong {
-  color: #667eea;
-  font-weight: 700;
-}
-
-.miora-message-text em {
-  font-style: italic;
-  opacity: 0.9;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .miora-mic-btn {
-    width: 36px;
-    height: 36px;
-    font-size: 14px;
-  }
-  
-  .miora-export-btn,
-  .miora-clear-btn {
-    width: 32px;
-    height: 32px;
-    font-size: 12px;
-  }
-  
-  .miora-image-viewer {
-    max-width: 95%;
-  }
-  
-  .miora-message-actions {
-    flex-wrap: wrap;
-  }
-  
-  .msg-action-btn {
-    font-size: 11px;
-    padding: 3px 8px;
-  }
-}
-
-/* Dark theme enhancements */
-body[data-theme="dark"] .miora-mic-btn {
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
-body[data-theme="dark"] .msg-action-btn {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-body[data-theme="dark"] .msg-action-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-/* Light theme adjustments */
-body[data-theme="light"] .miora-mic-btn {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-body[data-theme="light"] .msg-action-btn {
-  background: rgba(0, 0, 0, 0.05);
-  color: #64748b;
-}
-
-body[data-theme="light"] .msg-action-btn:hover {
-  background: rgba(0, 0, 0, 0.1);
-  color: #334155;
-}
-
-body[data-theme="light"] .miora-typing span {
-  background: #3b82f6;
-}
-
-/* Accessibility improvements */
-.miora-mic-btn:focus,
-.miora-export-btn:focus,
-.miora-clear-btn:focus,
-.msg-action-btn:focus {
-  outline: 2px solid #667eea;
-  outline-offset: 2px;
-}
-
-/* Animation for message entry */
-.miora-message {
-  animation: slideUp 0.3s ease;
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Loading state for images */
-.miora-message-image img {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-.miora-message-image img[src] {
-  animation: none;
-  background: transparent;
-}
-@media (max-width: 480px) {
-  .miora-chat-window {
-    width: 100vw;
-    height: 100vh;
-    border-radius: 0;
-  }
-  
-  .miora-quick-btn {
-    font-size: 12px;
-    padding: 8px 12px;
-  }
-  
-  .miora-input-area {
-    flex-wrap: wrap;
-  }
-}/* Additional Pro Styles */
-:root {
---miora-primary: #667eea;
---miora-secondary: #764ba2;
---miora-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-/* Header Buttons */
-.miora-header-btn {
-width: 36px;
-height: 36px;
-border: none;
-background: rgba(255, 255, 255, 0.1);
-color: #fff;
-border-radius: 8px;
-cursor: pointer;
-transition: all 0.2s ease;
-display: flex;
-align-items: center;
-justify-content: center;
-font-size: 14px;
-margin-left: 6px;
-}
-.miora-header-btn:hover {
-background: rgba(255, 255, 255, 0.2);
-transform: scale(1.05);
-}
-.miora-clear-btn:hover {
-background: rgba(239, 68, 68, 0.3);
-color: #fee2e2;
-}
-/* Mic Button */
-.miora-mic-btn {
-width: 42px;
-height: 42px;
-border: none;
-background: var(--miora-gradient);
-color: white;
-border-radius: 10px;
-cursor: pointer;
-transition: all 0.3s ease;
-display: flex;
-align-items: center;
-justify-content: center;
-font-size: 16px;
-box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-.miora-mic-btn:hover {
-transform: scale(1.05);
-box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
-}
-.miora-mic-btn.listening {
-animation: pulse 1s infinite;
-background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-}
-@keyframes pulse {
-0%, 100% { transform: scale(1); }
-50% { transform: scale(1.1); }
-}
-/* Settings Panel */
-.miora-settings-panel {
-position: fixed;
-top: 0;
-left: 0;
-right: 0;
-bottom: 0;
-z-index: 9999;
-display: none;
-}
-.miora-settings-panel.show {
-display: flex;
-align-items: center;
-justify-content: center;
-}
-.miora-settings-overlay {
-position: absolute;
-top: 0;
-left: 0;
-right: 0;
-bottom: 0;
-background: rgba(0, 0, 0, 0.7);
-backdrop-filter: blur(4px);
-}
-.miora-settings-content {
-position: relative;
-width: 90%;
-max-width: 600px;
-max-height: 80vh;
-background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-border-radius: 20px;
-box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-overflow: hidden;
-animation: slideUp 0.3s ease;
-}
-@keyframes slideUp {
-from {
-opacity: 0;
-transform: translateY(30px);
-}
-to {
-opacity: 1;
-transform: translateY(0);
-}
-}
-
-
-/* ========================================
-   RESPONSIVE - MOBILE
-   ======================================== */
-
-@media (max-width: 768px) {
-  .miora-settings-panel {
-    width: 100%;
-    max-width: 100%;
-  }
-  
-  .miora-settings-header {
-    padding: 16px 20px;
-  }
-  
-  .miora-settings-header h3 {
-    font-size: 18px;
-  }
-  
-  .miora-header-btn {
-    font-size: 16px;
-    padding: 8px;
-    min-width: 38px;
-    height: 38px;
-  }
-  
-  .miora-settings-body {
-    padding: 16px;
-  }
-  
-  .setting-section {
-    padding: 16px;
-    margin-bottom: 16px;
-  }
-  
-  .setting-section h4 {
-    font-size: 15px;
-  }
-  
-  .theme-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-  
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-  
-  .stat-value {
-    font-size: 24px;
-  }
-}
-
-@media (max-width: 480px) {
-  .miora-settings-header h3 {
-    font-size: 16px;
-  }
-  
-  .miora-header-btn {
-    font-size: 14px;
-    padding: 6px;
-    min-width: 34px;
-    height: 34px;
-  }
-  
-  .miora-settings-body {
-    padding: 12px;
-  }
-  
-  .setting-section {
-    padding: 12px;
-  }
-  
-  .theme-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* ========================================
-   ANIMATIONS
-   ======================================== */
-
-@keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.miora-settings-panel.show .miora-settings-content {
-  animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-.miora-settings-panel.show .miora-settings-overlay {
-  animation: fadeIn 0.3s ease;
-}/* ==========================================
-   MIORA MOBILE OPTIMIZATION
-   Ajouter ce code dans votre CSS principal
-   ========================================== */
-
-/* === BASE MOBILE FIXES === */
-@media (max-width: 768px) {
-  
-  /* Chat Window - Full Screen Mobile */
-  #miora-chat {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    max-width: 100% !important;
-    max-height: 100% !important;
-    border-radius: 0 !important;
-    transform: translateX(100%) !important;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  }
-  
-  #miora-chat[aria-hidden="false"] {
-    transform: translateX(0) !important;
-  }
-  
-  /* Header Mobile */
-  .miora-header {
-    padding: 16px !important;
-    border-radius: 0 !important;
-  }
-  
-  .miora-header h3 {
-    font-size: 18px !important;
-  }
-  
-  .miora-header-btn {
-    width: 36px !important;
-    height: 36px !important;
-    font-size: 16px !important;
-  }
-  
-  /* Messages Container */
-  #miora-messages {
-    padding: 12px !important;
-    height: calc(100vh - 180px) !important; /* Adjust for mobile keyboard */
-  }
-  
-  /* Message Bubbles */
-  .miora-message {
-    max-width: 85% !important;
-    margin-bottom: 12px !important;
-  }
-  
-  .miora-message-text {
-    font-size: 14px !important;
-    line-height: 1.5 !important;
-    padding: 10px 12px !important;
-  }
-  
-  .miora-message-avatar {
-    width: 32px !important;
-    height: 32px !important;
-  }
-  
-  /* Product Cards Mobile */
-  .miora-product-card,
-  [style*="background:rgba(30,41,59"] {
-    margin-bottom: 12px !important;
-  }
-  
-  /* Product Images */
-  [id^="gallery-"] {
-    height: 200px !important;
-  }
-
-  
-
-  
-  /* Input Area */
-  .miora-input-area {
-    padding: 12px !important;
-    gap: 8px !important;
-  }
-  
-  #miora-input {
-    font-size: 15px !important; /* Prevent zoom on iOS */
-    min-height: 42px !important;
-    padding: 10px 12px !important;
-  }
-  
-  #miora-send,
-  #miora-upload-btn,
-  #miora-mic-btn {
-    min-width: 42px !important;
-    min-height: 42px !important;
-    font-size: 18px !important;
-  }
-  
-  /* Settings Panel Mobile */
-  .miora-settings-panel {
-    position: fixed !important;
-    inset: 0 !important;
-  }
-  
-  .miora-settings-content {
-    width: 100% !important;
-    height: 100% !important;
-    max-width: 100% !important;
-    border-radius: 0 !important;
-  }
-  
-  .theme-grid {
-    grid-template-columns: 1fr !important;
-  }
-  
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-  
-  /* Image Overlay Mobile */
-  .miora-image-viewer img {
-    max-width: 95% !important;
-    max-height: 70vh !important;
-  }
-  
-
-}
-
-/* === SMALL MOBILE (< 400px) === */
-@media (max-width: 400px) {
-  
-  
-  
-  .miora-message {
-    max-width: 90% !important;
-  }
-  
-  [onclick*="mioraAddToCart"],
-  [onclick*="mioraViewProduct"] {
-    font-size: 12px !important;
-    padding: 8px 10px !important;
-  }
-}
-
-/* === LANDSCAPE MOBILE === */
-@media (max-height: 500px) and (orientation: landscape) {
-  
-  #miora-messages {
-    height: calc(100vh - 140px) !important;
-  }
-  
-  .miora-header {
-    padding: 10px 16px !important;
-  }
-  
-  .miora-input-area {
-    padding: 8px !important;
-  }
-  
-  #miora-input {
-    min-height: 36px !important;
-  }
-}
-
-/* === TOUCH IMPROVEMENTS === */
-@media (hover: none) and (pointer: coarse) {
-  
-  /* Bigger tap targets */
-  button, 
-  [onclick],
-  [role="button"] {
-    min-height: 44px !important;
-    min-width: 44px !important;
-  }
-  
-  /* Remove hover effects on touch */
-  *:hover {
-    transform: none !important;
-  }
-  
-  /* Active state for touch feedback */
-  button:active,
-  [onclick]:active {
-    opacity: 0.7 !important;
-    transform: scale(0.98) !important;
-  }
-}
-
-/* === SAFE AREA (iPhone notch) === */
-@supports (padding: max(0px)) {
-  #miora-chat {
-    padding-top: max(env(safe-area-inset-top), 0) !important;
-    padding-bottom: max(env(safe-area-inset-bottom), 0) !important;
-  }
-  
-  .miora-input-area {
-    padding-bottom: max(env(safe-area-inset-bottom), 12px) !important;
-  }
-}@keyframes pulse {
-  0%, 100% { 
-    transform: scale(1); 
-    opacity: 1; 
-  }
-  50% { 
-    transform: scale(1.1); 
-    opacity: 0.8; 
-  }
-}
-
-@keyframes fadeIn {
-  from { 
-    opacity: 0; 
-    transform: translate(-50%, -50%) scale(0.9); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translate(-50%, -50%) scale(1); 
-  }
-}
-
-@keyframes fadeOut {
-  from { 
-    opacity: 1; 
-    transform: translate(-50%, -50%) scale(1); 
-  }
-  to { 
-    opacity: 0; 
-    transform: translate(-50%, -50%) scale(0.9); 
-  }
-}
-
-.miora-mic-btn.pulsing {
-  animation: pulse 1.5s infinite !important;
-  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
-}/* ========================================
-   MIORA AI - ADDITIONAL ANIMATIONS
-   ======================================== */
-
-@keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slideOutRight {
-  from {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-}
-
-/* Lazy loading shimmer effect */
-.miora-lazy-image[data-src] {
-  background: linear-gradient(
-    90deg,
-    #1e293b 0%,
-    #334155 50%,
-    #1e293b 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-/* Recording indicator pulse */
-@keyframes recordingPulse {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
-  }
-  50% {
-    box-shadow: 0 0 0 15px rgba(239, 68, 68, 0);
-  }
-}
-
-#miora-recording-indicator > div:first-child {
-  animation: recordingPulse 1.5s infinite;
-}
-
-/* Comparison button hover */
-#miora-comparison-float-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 12px 32px rgba(139,92,246,0.6);
-}
-
-/* Language button transitions */
-.language-btn {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.language-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
-
-.language-btn.active {
-  transform: scale(1.05);
-}.miora-input {
-  flex: 1;
-  padding: 12px 16px;
-  background: rgba(30, 41, 59, 0.6);
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  border-radius: 12px;
-  color: #fff;
-  font-size: 14px;
-  font-family: system-ui, -apple-system, sans-serif;
-  outline: none;
-  transition: all 0.3s ease;
-  
-  /* ✅ VAOVAO - Textarea specific */
-  resize: none;
-  overflow-y: auto;
-  min-height: 44px;
-  max-height: 120px;
-  line-height: 1.5;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(139,92,246,0.3) transparent;
-}
-
-.miora-input::-webkit-scrollbar {
-  width: 6px;
-}
-
-.miora-input::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.miora-input::-webkit-scrollbar-thumb {
-  background: rgba(139,92,246,0.3);
-  border-radius: 10px;
-}
-
-.miora-input:focus {
-  border-color: var(--miora-primary, #8b5cf6);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-}
-
-.miora-input::placeholder {
-  color: #64748b;
-}/* ==========================================
-   SETTINGS PANEL - FULL RESPONSIVE
-   ========================================== */
-
-.miora-settings-panel {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 10000;
-  display: none;
-  animation: fadeIn 0.3s ease;
-}
-
-.miora-settings-panel.show {
-  display: block;
-}
-
-.miora-settings-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
-  cursor: pointer;
-}
-
-.miora-settings-content {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 90%;
-  max-width: 600px;
-  max-height: 85vh;
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-  border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  animation: slideUp 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-/* Header */
-.miora-settings-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 24px;
-  background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(124,58,237,0.2));
-  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-  flex-shrink: 0;
-}
-
-.miora-settings-header h3 {
-  margin: 0;
-  color: #fff;
-  font-size: 20px;
-  font-weight: 700;
-}
-
-.miora-settings-close {
-  width: 36px;
-  height: 36px;
-  background: rgba(239, 68, 68, 0.2);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  border-radius: 50%;
-  color: #fca5a5;
-  font-size: 18px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.miora-settings-close:hover {
-  background: rgba(239, 68, 68, 0.3);
-  transform: scale(1.1);
-}
-
-/* Body - Scrollable */
-.miora-settings-body {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 24px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(139,92,246,0.3) transparent;
-}
-
-.miora-settings-body::-webkit-scrollbar {
-  width: 8px;
-}
-
-.miora-settings-body::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.miora-settings-body::-webkit-scrollbar-thumb {
-  background: rgba(139,92,246,0.3);
-  border-radius: 10px;
-}
-
-.miora-settings-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(139,92,246,0.5);
-}
-
-/* Sections */
-.setting-section {
-  margin-bottom: 28px;
-}
-
-.setting-section:last-child {
-  margin-bottom: 0;
-}
-
-.setting-section h4 {
-  margin: 0 0 16px 0;
-  color: #fff;
-  font-size: 16px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Setting Items */
-.setting-item {
-  margin-bottom: 12px;
-}
-
-.setting-item label {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: #cbd5e1;
-  font-size: 14px;
-  cursor: pointer;
-  padding: 12px;
-  border-radius: 10px;
-  transition: background 0.2s ease;
-}
-
-.setting-item label:hover {
-  background: rgba(148, 163, 184, 0.1);
-}
-
-.setting-item input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-  accent-color: var(--miora-primary, #8b5cf6);
-}
-
-/* Language Selector */
-.language-selector {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.language-btn {
-  flex: 1;
-  min-width: 90px;
-  padding: 12px;
-  background: rgba(148,163,184,0.2);
-  color: #fff;
-  border: 1px solid rgba(148,163,184,0.3);
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-align: center;
-}
-
-.language-btn:hover {
-  background: rgba(148,163,184,0.3);
-  transform: translateY(-2px);
-}
-
-.language-btn.active {
-  background: linear-gradient(135deg, #10b981, #059669);
-  border-color: #10b981;
-  box-shadow: 0 4px 12px rgba(16,185,129,0.3);
-}
-
-/* Theme Grid */
-.theme-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px;
-}
-
-.theme-option {
-  padding: 16px;
-  border: 2px solid transparent;
-  border-radius: 12px;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-  text-align: center;
-}
-
-.theme-option:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-}
-
-.theme-option.active {
-  border-color: rgba(255,255,255,0.4);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-}
-
-.theme-option i {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  font-size: 16px;
-}
-
-/* Stats Grid */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-
-.stat-item {
-  padding: 16px;
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  border-radius: 12px;
-  text-align: center;
-}
-
-.stat-value {
-  font-size: 28px;
-  font-weight: 700;
-  color: #60a5fa;
-  margin-bottom: 6px;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: #94a3b8;
-  font-weight: 500;
-}
-
-/* Action Buttons */
-.setting-action-btn {
-  width: 100%;
-  padding: 14px;
-  margin-bottom: 10px;
-  background: rgba(148, 163, 184, 0.2);
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  border-radius: 10px;
-  color: #cbd5e1;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.setting-action-btn:hover {
-  background: rgba(148, 163, 184, 0.3);
-  border-color: rgba(148, 163, 184, 0.5);
-  transform: translateY(-2px);
-}
-
-.setting-action-btn:active {
-  transform: translateY(0);
-}
-
-/* Footer */
-.miora-settings-footer {
-  padding: 16px 24px;
-  background: rgba(15, 23, 42, 0.8);
-  border-top: 1px solid rgba(148, 163, 184, 0.2);
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.miora-settings-footer small {
-  color: #64748b;
-  font-size: 12px;
-}
-
-
-/* ==========================================
-   MOBILE RESPONSIVE
-   ========================================== */
-
-@media (max-width: 768px) {
-  .miora-settings-content {
-    width: 95%;
-    max-height: 90vh;
-    border-radius: 16px;
-  }
-  
-  .miora-settings-header {
-    padding: 16px 20px;
-  }
-  
-  .miora-settings-header h3 {
-    font-size: 18px;
-  }
-  
-  .miora-settings-body {
-    padding: 20px 16px;
-  }
-  
-  .theme-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-  
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-  
-  .language-selector {
-    flex-direction: column;
-  }
-  
-  .language-btn {
-    flex: none;
-    width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .miora-settings-content {
-    width: 100%;
-    max-height: 100vh;
-    border-radius: 0;
-    top: 0;
-    left: 0;
-    transform: none;
-  }
-  
-  .miora-settings-header {
-    padding: 14px 16px;
-  }
-  
-  .miora-settings-header h3 {
-    font-size: 16px;
-  }
-  
-  .miora-settings-body {
-    padding: 16px;
-  }
-  
-  .setting-section h4 {
-    font-size: 15px;
-  }
-  
-  .theme-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .theme-option {
-    padding: 14px;
-  }
-}
-
-/* Animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -40%);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%);
-  }
-}
-
-/* Mobile animation override */
-@media (max-width: 480px) {
-  @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(100%);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-}    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(0.8); }
-    }
-    
-    @keyframes slideInRight {
-      from {
-        transform: translateX(100%);
-        opacity: 0;
-      }
-      to {
-        transform: translateX(0);
-        opacity: 1;
-      }
-    }
-    
-    @keyframes slideOutRight {
-      from {
-        transform: translateX(0);
-        opacity: 1;
-      }
-      to {
-        transform: translateX(100%);
-        opacity: 0;
-      }
-    }/* ==========================================
-   MIORA ASSISTANT SWITCH STYLES
-   ========================================== */
-
-.miora-assistant-switch {
-  padding: 12px;
-  background: rgba(15, 23, 42, 0.95);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.assistant-switch-wrapper {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-}
-
-.assistant-option {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  background: rgba(30, 41, 59, 0.6);
-  border: 2px solid rgba(148, 163, 184, 0.2);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.assistant-option::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(124, 58, 237, 0.1));
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.assistant-option:hover {
-  background: rgba(30, 41, 59, 0.8);
-  border-color: rgba(139, 92, 246, 0.5);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.assistant-option:hover::before {
-  opacity: 1;
-}
-
-.assistant-option:active {
-  transform: translateY(0);
-}
-
-.assistant-option.active {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(124, 58, 237, 0.3));
-  border-color: #8b5cf6;
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
-  transform: translateY(0);
-}
-
-.assistant-option.active::before {
-  opacity: 0;
-}
-
-.assistant-option.active .assistant-avatar {
-  border-color: #8b5cf6;
-  box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
-}
-
-.assistant-option.active .assistant-name {
-  color: #a78bfa;
-}
-
-.assistant-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid rgba(139, 92, 246, 0.5);
-  transition: all 0.3s ease;
-  flex-shrink: 0;
-}
-
-.assistant-option:hover .assistant-avatar {
-  transform: scale(1.05);
-  border-color: rgba(139, 92, 246, 0.8);
-}
-
-.assistant-info {
-  flex: 1;
-  text-align: left;
-  min-width: 0; /* For text truncation */
-}
-
-.assistant-name {
-  font-weight: 700;
-  font-size: 14px;
-  color: #fff;
-  margin-bottom: 2px;
-  line-height: 1.2;
-  transition: color 0.3s ease;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.assistant-role {
-  font-size: 11px;
-  color: #94a3b8;
-  line-height: 1.2;
-  transition: color 0.3s ease;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.assistant-option:hover .assistant-role {
-  color: #cbd5e1;
-}
-
-.assistant-option.active .assistant-role {
-  color: #c4b5fd;
-}
-
-/* ==========================================
-   RESPONSIVE - Mobile
-   ========================================== */
-
-@media (max-width: 480px) {
-  .miora-assistant-switch {
-    padding: 10px 8px;
-  }
-  
-  .assistant-switch-wrapper {
-    gap: 6px;
-  }
-  
-  .assistant-option {
-    padding: 8px 10px;
-    gap: 8px;
-  }
-  
-  .assistant-avatar {
-    width: 36px;
-    height: 36px;
-  }
-  
-  .assistant-name {
-    font-size: 13px;
-  }
-  
-  .assistant-role {
-    font-size: 10px;
-  }
-}
-
-@media (max-width: 360px) {
-  .assistant-option {
-    padding: 8px;
-    gap: 6px;
-  }
-  
-  .assistant-avatar {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .assistant-name {
-    font-size: 12px;
-  }
-  
-  .assistant-role {
-    font-size: 9px;
-  }
-}
-
-/* ==========================================
-   ACCESSIBILITY
-   ========================================== */
-
-.assistant-option:focus {
-  outline: 2px solid #8b5cf6;
-  outline-offset: 2px;
-}
-
-.assistant-option:focus:not(:focus-visible) {
-  outline: none;
-}
-/* For screen readers */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-
-/* ==========================================
-   ANIMATIONS
-   ========================================== */
-
-@keyframes switchPulse {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
-  }
-}
-
-.assistant-option.active {
-  animation: switchPulse 2s ease-in-out infinite;
-}
-
-/* ==========================================
-   DARK MODE SUPPORT
-   ========================================== */
-
-.miora-dark-mode .assistant-option {
-  background: rgba(15, 23, 42, 0.8);
-  border-color: rgba(71, 85, 105, 0.3);
-}
-
-.miora-dark-mode .assistant-option:hover {
-  background: rgba(30, 41, 59, 0.9);
-  border-color: rgba(139, 92, 246, 0.6);
-}
-
-.miora-dark-mode .assistant-option.active {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(124, 58, 237, 0.25));
-  border-color: #7c3aed;
-}
-
-/* ==========================================
-   LOADING STATE (Optional)
-   ========================================== */
-
-.assistant-option.loading {
-  pointer-events: none;
-  opacity: 0.6;
-}
-
-.assistant-option.loading .assistant-avatar {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* ==========================================
-   BADGE INDICATOR (Optional - for notifications)
-   ========================================== */
-
-.assistant-option .badge {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 8px;
-  height: 8px;
-  background: #ef4444;
-  border-radius: 50%;
-  border: 2px solid rgba(15, 23, 42, 0.95);
-  animation: badgePulse 2s ease-in-out infinite;
-}
-
-@keyframes badgePulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.7;
-    transform: scale(1.2);
-  }
-}/* ==========================================
    BOTTOM NAVIGATION - 5 ITEMS ✅
    ========================================== */
 
@@ -5886,100 +3813,6 @@ transform: translateY(0);
 }
 
 /* ==========================================
-   MIORA BUTTON ✅
-   ========================================== */
-
-.nav-btn-miora {
-  position: relative;
-}
-
-.icon-miora {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid rgba(139, 92, 246, 0.3);
-  box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.nav-btn-miora:hover .icon-miora {
-  transform: scale(1.15) translateY(-2px);
-  border-color: rgba(139, 92, 246, 0.6);
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.6);
-}
-
-.nav-btn-miora.active {
-  color: #8b5cf6;
-  background: rgba(139, 92, 246, 0.1);
-}
-
-.nav-btn-miora.active .icon-miora {
-  border-color: #8b5cf6;
-  box-shadow: 0 0 16px rgba(139, 92, 246, 0.5);
-}
-
-/* Miora AI pulse animation */
-@keyframes miora-pulse {
-  0%, 100% {
-    box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.6);
-  }
-}
-
-.nav-btn-miora .icon-miora {
-  animation: miora-pulse 3s ease-in-out infinite;
-}
-
-/* ==========================================
-   RESPONSIVE - SMALL SCREENS ✅
-   ========================================== */
-
-@media (max-width: 360px) {
-  .nav-btn {
-    padding: 8px 2px;
-    gap: 2px;
-  }
-  
-  .nav-btn .icon {
-    width: 18px;
-    height: 18px;
-  }
-  
-  .nav-btn .label {
-    font-size: 9px;
-  }
-  
-  .icon-miora {
-    width: 22px;
-    height: 22px;
-  }
-  
-  .nav-cart-badge {
-    min-width: 14px;
-    height: 14px;
-    font-size: 8px;
-    top: -6px;
-    right: -8px;
-  }
-}
-
-/* ==========================================
-   DESKTOP MODE ✅
-   ========================================== */
-
-@media (min-width: 1024px) {
-  .bottom-nav {
-    display: none; /* Hidden on desktop */
-  }
-}/* Hide old floating cart button */
-#cdCartFab,
-#cart-toggle,
-.cart-fab {
-  display: none !important;
-}/* ==========================================
    CART DRAWER - COMPLETE RESPONSIVE MODULE
    ========================================== */
 
@@ -7201,4 +5034,926 @@ transform: translateY(0);
 
 .icon-cart:hover i {
   animation: cartPulse 0.6s ease infinite;
+}/* ==========================================
+   BOTTOM NAV - AGENT MIORA BUTTON
+   ========================================== */
+
+.nav-btn .icon-miora {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.nav-btn:hover .icon-miora {
+  border-color: #667eea;
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.nav-btn.active .icon-miora {
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+  animation: pulse-miora 2s infinite;
+}
+
+@keyframes pulse-miora {
+  0%, 100% {
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(102, 126, 234, 0.1);
+  }
+}
+
+/* Notification badge pour Agent Miora */
+.nav-btn .miora-notification {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  border: 2px solid #0a0e17;
+  animation: pulse-notification 2s infinite;
+}
+
+@keyframes pulse-notification {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}/* ==========================================
+   AGENT MIORA - CHAT WINDOW COMPLETE
+   ========================================== */
+
+/* Chat Window Container */
+.agent-chat-window {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100vh;
+  background: linear-gradient(135deg, #0a0e17 0%, #1a1f2e 100%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.agent-chat-window[aria-hidden="false"] {
+  transform: translateY(0);
+}
+
+/* Header Complete */
+.agent-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-bottom: 2px solid rgba(102, 126, 234, 0.3);
+  backdrop-filter: blur(20px);
+  position: relative;
+  z-index: 10;
+}
+
+.agent-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(102, 126, 234, 0.6) 50%, 
+    transparent 100%);
+}
+
+.agent-header img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid rgba(102, 126, 234, 0.4);
+  box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+  animation: glow-avatar 3s infinite;
+}
+
+@keyframes glow-avatar {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(102, 126, 234, 0.6);
+  }
+}
+
+.agent-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#agent-title {
+  font-weight: 800;
+  font-size: 16px;
+  color: #fff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.agent-status {
+  font-size: 11px;
+  color: #10b981;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.agent-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: #10b981;
+  border-radius: 50%;
+  animation: pulse-status 2s infinite;
+}
+
+@keyframes pulse-status {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.3);
+  }
+}
+
+/* Header Buttons */
+.agent-header-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-size: 16px;
+}
+
+.agent-header-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.agent-header-btn:active {
+  transform: scale(0.95);
+}
+
+.agent-close {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.15) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.agent-close:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(220, 38, 38, 0.25) 100%);
+  transform: scale(1.05) rotate(90deg);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+.agent-close:active {
+  transform: scale(0.95);
+}
+
+.agent-clear-btn {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.1) 100%);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #f59e0b;
+}
+
+.agent-clear-btn:hover {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.2) 100%);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+}/* ==========================================
+   MESSAGES AREA - COMPLETE STYLES
+   ========================================== */
+
+.agent-messages {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px 16px;
+  scroll-behavior: smooth;
+  background: linear-gradient(180deg, 
+    rgba(10, 14, 23, 0.95) 0%, 
+    rgba(15, 18, 22, 0.98) 100%);
+  position: relative;
+}
+
+/* Custom Scrollbar */
+.agent-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.agent-messages::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+}
+
+.agent-messages::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+}
+
+.agent-messages::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #7c3aed 0%, #8b5cf6 100%);
+}
+
+/* Message Container */
+.agent-message {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  animation: slideInMessage 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+  animation-fill-mode: forwards;
+}
+
+@keyframes slideInMessage {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Avatar */
+.agent-message-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+.agent-user .agent-message-avatar {
+  order: 2;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.agent-message-avatar::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.agent-message:hover .agent-message-avatar::before {
+  opacity: 1;
+}
+
+.agent-msg-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.agent-user .agent-message-avatar i {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+  font-size: 16px;
+}
+
+/* Message Content */
+.agent-message-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 85%;
+}
+
+.agent-user .agent-message-content {
+  align-items: flex-end;
+  order: 1;
+  max-width: 80%;
+}
+
+.agent-message-text {
+  padding: 14px 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e5e7eb;
+  line-height: 1.6;
+  word-wrap: break-word;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  font-size: 14px;
+}
+
+.agent-user .agent-message-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  color: #fff;
+  border-radius: 18px 18px 4px 18px;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+}
+
+.agent-bot .agent-message-text {
+  border-radius: 18px 18px 18px 4px;
+}
+
+/* Text Formatting */
+.agent-message-text strong {
+  font-weight: 700;
+  color: #fff;
+}
+
+.agent-message-text em {
+  font-style: italic;
+  color: #d1d5db;
+}
+
+.agent-message-text code {
+  padding: 2px 6px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  color: #10b981;
+}
+
+.agent-message-text a {
+  color: #60a5fa;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.agent-message-text a:hover {
+  color: #93c5fd;
+}
+
+/* Message Image */
+.agent-message-image {
+  margin-top: 8px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(102, 126, 234, 0.2);
+}
+
+.agent-message-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
+.agent-message-image img:hover {
+  transform: scale(1.02);
+}
+
+/* Message Actions */
+.agent-message-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.agent-message:hover .agent-message-actions {
+  opacity: 1;
+}
+
+.msg-action-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.msg-action-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.msg-action-btn:active {
+  transform: scale(0.95);
+}
+
+.msg-delete-btn {
+  color: #ef4444;
+}
+
+.msg-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Typing Indicator */
+.agent-typing-msg {
+  animation: none !important;
+}
+
+.agent-typing {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.agent-typing span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  animation: typingBounce 1.4s infinite ease-in-out;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+.agent-typing span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.agent-typing span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.agent-typing span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingBounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.6;
+  }
+  30% {
+    transform: translateY(-12px);
+    opacity: 1;
+  }
+}/* ==========================================
+   INPUT AREA - COMPLETE WITH MICROPHONE
+   ========================================== */
+
+.agent-input-area {
+  display: flex;
+  gap: 10px;
+  padding: 16px 20px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, 
+    rgba(15, 18, 22, 0.98) 0%, 
+    rgba(10, 14, 23, 0.95) 100%);
+  border-top: 2px solid rgba(102, 126, 234, 0.2);
+  backdrop-filter: blur(20px);
+  position: relative;
+  z-index: 10;
+}
+
+.agent-input-area::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(102, 126, 234, 0.6) 50%, 
+    transparent 100%);
+}
+
+.agent-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 12px 16px;
+  color: #fff;
+  font-size: 14px;
+  font-family: inherit;
+  resize: none;
+  max-height: 120px;
+  outline: none;
+  transition: all 0.3s;
+  line-height: 1.5;
+}
+
+.agent-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.agent-input:focus {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(102, 126, 234, 0.5);
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+/* Microphone Button */
+.agent-mic-btn {
+  width: 46px;
+  height: 46px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.15) 100%);
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  color: #3b82f6;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  font-size: 18px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.agent-mic-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.agent-mic-btn i {
+  position: relative;
+  z-index: 1;
+}
+
+.agent-mic-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.agent-mic-btn:hover::before {
+  opacity: 0.2;
+}
+
+.agent-mic-btn:active {
+  transform: scale(0.95);
+}
+
+/* Microphone - Listening State */
+.agent-mic-btn.listening {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fff;
+  animation: micPulse 1.5s infinite;
+}
+
+@keyframes micPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(239, 68, 68, 0);
+  }
+}
+
+.agent-mic-btn.listening::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  opacity: 0.3;
+  z-index: -1;
+  animation: micGlow 1.5s infinite;
+}
+
+@keyframes micGlow {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0;
+    transform: scale(1.3);
+  }
+}
+
+/* Send Button */
+.agent-send {
+  width: 46px;
+  height: 46px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  font-size: 18px;
+  flex-shrink: 0;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.agent-send::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.agent-send i {
+  position: relative;
+  z-index: 1;
+  transform: rotate(0deg);
+  transition: transform 0.3s;
+}
+
+.agent-send:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.6);
+}
+
+.agent-send:hover::before {
+  opacity: 1;
+}
+
+.agent-send:hover i {
+  transform: rotate(45deg);
+}
+
+.agent-send:active {
+  transform: scale(0.95);
+}
+
+.agent-send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}/* ==========================================
+   RESPONSIVE - DESKTOP MODE
+   ========================================== */
+
+@media (min-width: 768px) {
+  .agent-chat-window {
+    bottom: 90px;
+    left: auto;
+    right: 24px;
+    width: 420px;
+    height: 650px;
+    border-radius: 20px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+  }
+  
+  .agent-chat-window[aria-hidden="false"] {
+    transform: translateY(0) scale(1);
+  }
+  
+  .agent-chat-window[aria-hidden="true"] {
+    transform: translateY(30px) scale(0.9);
+    opacity: 0;
+  }
+  
+  .agent-header {
+    border-radius: 20px 20px 0 0;
+  }
+  
+  .agent-messages {
+    padding: 24px 20px;
+  }
+  
+  .agent-message-content {
+    max-width: 80%;
+  }
+  
+  .agent-input-area {
+    border-radius: 0 0 20px 20px;
+    padding: 20px;
+  }
+}
+
+/* Large Desktop */
+@media (min-width: 1024px) {
+  .agent-chat-window {
+    width: 460px;
+    height: 700px;
+    right: 32px;
+    bottom: 100px;
+  }
+}/* Settings Panel */
+.agent-settings-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10000;
+  display: none;
+}
+
+.agent-settings-panel.show {
+  display: block;
+}
+
+.agent-settings-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.agent-settings-content {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 90%;
+  max-width: 400px;
+  background: #0f1216;
+  overflow-y: auto;
+  animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.agent-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.agent-settings-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.agent-settings-body {
+  padding: 20px;
+}
+
+.setting-section {
+  margin-bottom: 24px;
+}
+
+.setting-section h4 {
+  margin-bottom: 12px;
+  color: #fff;
+  font-size: 16px;
+}
+
+.setting-item {
+  margin-bottom: 12px;
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+  .agent-chat-window {
+    bottom: 80px;
+    left: auto;
+    right: 20px;
+    width: 400px;
+    height: 600px;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  }
+  
+  .agent-chat-window[aria-hidden="false"] {
+    transform: translateY(0) scale(1);
+  }
+  
+  .agent-chat-window[aria-hidden="true"] {
+    transform: translateY(20px) scale(0.95);
+  }
+}/* Lazy loading for images */
+.agent-message-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  background: linear-gradient(45deg, #1e293b, #334155);
+  min-height: 200px;
+}
+
+.agent-message-image img:hover {
+  transform: scale(1.02);
+}
+
+/* Loading placeholder */
+.agent-message-image {
+  position: relative;
+  background: linear-gradient(45deg, #1e293b, #334155);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.agent-message-image::before {
+  content: '🎨 Chargement...';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(255,255,255,0.5);
+  font-size: 14px;
+  z-index: 1;}
+
+@keyframes pulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+  50% { 
+    opacity: 0.7; 
+    transform: scale(1.1); 
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
