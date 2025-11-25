@@ -4,7 +4,7 @@
    FIX: Images non disponibles
    ========================================== */
 
-const VERSION = '1.8.2'; // ✅ Version incrémentée
+const VERSION = '1.8.3'; 
 const CACHE_NAME = `mijoro-v${VERSION}`;
 const OFFLINE_CACHE = `mijoro-offline-v${VERSION}`;
 const IMAGE_CACHE = `mijoro-images-v${VERSION}`;
@@ -423,19 +423,26 @@ function offlineFallback(request) {
    ========================================== */
 
 const DEFAULT_ICON = './icons/android-launchericon-192-192.png';
-const DEFAULT_BADGE = './icons/512×512-monochrome.png';
+const DEFAULT_BADGE = './icons/512x512-monochrome.png';
 
 self.addEventListener('push', function(event) {
   log('📨 Push notification received');
   
   let notificationData = {
-    title: '🆕 Nouveau produit!',
-    body: 'Découvrez les nouveautés sur Mijoro',
+    title: 'Mijoro Boutique',
+    body: '🆕 Nouveau produit disponible!',
     icon: DEFAULT_ICON,
     badge: DEFAULT_BADGE,
+    tag: 'mijoro-notification',
     requireInteraction: false,
     vibrate: [200, 100, 200],
-    data: {}
+    data: {
+      url: '/Mijoro-boutique/'
+    },
+    actions: [
+      { action: 'view', title: '👀 Voir', icon: DEFAULT_ICON },
+      { action: 'dismiss', title: '✖️ Fermer' }
+    ]
   };
   
   if (event.data) {
@@ -445,13 +452,12 @@ self.addEventListener('push', function(event) {
       
       notificationData = {
         ...notificationData,
-        ...payload,
+        title: payload.title || 'Mijoro Boutique',
+        body: payload.body || notificationData.body,
         icon: payload.image || payload.icon || DEFAULT_ICON,
         image: payload.image,
-        actions: payload.actions || [
-          { action: 'view', title: '👀 Voir', icon: DEFAULT_ICON },
-          { action: 'dismiss', title: '✖️ Fermer' }
-        ]
+        data: payload.data || notificationData.data,
+        actions: payload.actions || notificationData.actions
       };
       
     } catch (err) {
@@ -482,24 +488,23 @@ self.addEventListener('notificationclick', function(event) {
   if (data.url) {
     url = data.url;
   } else if (data.productId) {
-    url: `https://mij-b.github.io/Mijoro-boutique/?product=${data.productId}#shop`;
+    url = `https://mij-b.github.io/Mijoro-boutique/?product=${data.productId}#shop`;
   }
   
   log('🔗 Opening:', url);
   
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then((windowClients) => {
-        for (let client of windowClients) {
-          if (client.url.includes('mij-b.github.io/Mijoro-boutique/') && 'focus' in client) {
-            return client.navigate(url).then(() => client.focus());
-          }
+    .then((windowClients) => {
+      for (let client of windowClients) {
+        if (client.url.includes('mij-b.github.io/Mijoro-boutique') && 'focus' in client) {
+          return client.navigate(url).then(() => client.focus());
         }
-        return clients.openWindow(url);
-      })
+      }
+      return clients.openWindow(url);
+    })
   );
 });
-
 /* ==========================================
    BACKGROUND SYNC
    ========================================== */
