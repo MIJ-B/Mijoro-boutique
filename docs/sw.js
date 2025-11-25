@@ -423,23 +423,20 @@ function offlineFallback(request) {
    ========================================== */
 
 const DEFAULT_ICON = './icons/android-launchericon-192-192.png';
-const DEFAULT_BADGE = './icons/512x512-monochrome.png';
+const DEFAULT_BADGE = './icons/512×512-monochrome.png';
 
 self.addEventListener('push', function(event) {
   log('📨 Push notification received');
   
-   let notificationData = {
-   title: 'Mijoro Boutique', // ✅ ITO - Manova titre
-   body: '🆕 Nouveau produit disponible!', // ✅ Message tsara kokoa
-   icon: DEFAULT_ICON,
-   badge: DEFAULT_BADGE,
-   tag: 'mijoro-notification', // ✅ Ampiana tag
-   requireInteraction: false,
-   vibrate: [200, 100, 200],
-   data: {
-     url: '/Mijoro-boutique/' // ✅ Default URL
-   }
- };
+  let notificationData = {
+    title: '🆕 Nouveau produit!',
+    body: 'Découvrez les nouveautés sur Mijoro',
+    icon: DEFAULT_ICON,
+    badge: DEFAULT_BADGE,
+    requireInteraction: false,
+    vibrate: [200, 100, 200],
+    data: {}
+  };
   
   if (event.data) {
     try {
