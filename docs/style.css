@@ -512,7 +512,6 @@ p {
    ========================================== */
 
 
-
 .qo-header {
   display: flex;
   align-items: center;
@@ -711,26 +710,37 @@ p {
   color: #fef3c7;
 }
 
+/* Bouton toggle avec animations améliorées */
+.qo-toggle-btn {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .qo-toggle-btn:hover {
-  background: rgba(255,255,255,0.15) !important;
-  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.15) !important;
+  transform: scale(1.05);
 }
 
 .qo-toggle-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.98);
+  transition-duration: 0.1s;
 }
 
+/* Animation de l'icône */
 .qo-toggle-btn i {
-  transition: transform 0.3s ease;
+  display: inline-block;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .qo-toggle-btn.collapsed i {
   transform: rotate(180deg);
 }
 
+/* Contenu avec transition fluide */
 #qoContent {
   max-height: 1000px;
   opacity: 1;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #qoContent.collapsed {
@@ -738,6 +748,7 @@ p {
   opacity: 0;
   margin-top: 0 !important;
   padding-top: 0 !important;
+  padding-bottom: 0 !important;
 }
 /* ==========================================
    QUICK ORDER - OWNER TOOLS ✅
@@ -1450,6 +1461,18 @@ body.owner-mode .qo-tools {
   padding: 20px 16px 20px !important;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
+  /* ✅ CRITICAL: Bottom padding = bottom-menu height + safe margin */
+  padding-bottom: calc(var(--bottom-menu-h, 64px) + 20px);
+  
+  /* ✅ iOS safe area */
+  padding-bottom: calc(var(--bottom-menu-h, 64px) + 20px + env(safe-area-inset-bottom));
+}
+
+/* ✅ Alternative: use margin on last card */
+#products-row > .product-card:last-child,
+#products-box > *:last-child {
+  margin-bottom: 20px;
+
 }
 
 #products-wrapper::-webkit-scrollbar {
@@ -3648,7 +3671,517 @@ body.theme-switching * {
     border-radius: 0 !important;
     max-height: 100vh !important;
   }
-}/* ==========================================
+}
+/* ==========================================
+   FIX: Isolation des sections fixed
+   ========================================== */
+
+/* Empêche les touch events de traverser */
+#home,
+#shop,
+#params {
+  position: fixed;
+  inset: 0;
+  touch-action: pan-y !important; /* Autorise scroll vertical uniquement */
+  isolation: isolate; /* Isole le stacking context */
+}
+
+/* Cache les sections inactives */
+section:not(.active) {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
+}
+
+section.active {
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  z-index: 1 !important;
+}
+
+/* Home content scrollable */
+#home-content {
+  position: relative;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain; /* Empêche le scroll de déborder */
+  touch-action: pan-y; /* Scroll vertical uniquement */
+}
+
+/* Shop wrapper scrollable */
+#products-wrapper {
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+/* Background body ne doit pas interférer */
+body {
+  touch-action: pan-y;
+  overflow: hidden;
+}
+
+body::before,
+body::after {
+  pointer-events: none !important;
+  touch-action: none !important;
+}/* Transitions douces entre sections */
+section {
+  transition: 
+    opacity 0.3s ease,
+    visibility 0.3s ease,
+    z-index 0s linear 0.3s; /* z-index change après la transition */
+}
+
+section.active {
+  transition: 
+    opacity 0.3s ease,
+    visibility 0s ease,
+    z-index 0s linear 0s; /* z-index change immédiatement */
+}
+
+
+/* ==========================================
+   SETTINGS PANEL - FULL RESPONSIVE
+   ========================================== */
+
+.miora-settings-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10000;
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+
+.miora-settings-panel.show {
+  display: block;
+}
+
+.miora-settings-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+}
+
+.miora-settings-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 600px;
+  max-height: 85vh;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideUp 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Header */
+.miora-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(124,58,237,0.2));
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  flex-shrink: 0;
+}
+
+.miora-settings-header h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.miora-settings-close {
+  width: 36px;
+  height: 36px;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 50%;
+  color: #fca5a5;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.miora-settings-close:hover {
+  background: rgba(239, 68, 68, 0.3);
+  transform: scale(1.1);
+}
+
+/* Body - Scrollable */
+.miora-settings-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139,92,246,0.3) transparent;
+}
+
+.miora-settings-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.miora-settings-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.miora-settings-body::-webkit-scrollbar-thumb {
+  background: rgba(139,92,246,0.3);
+  border-radius: 10px;
+}
+
+.miora-settings-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(139,92,246,0.5);
+}
+
+/* Sections */
+.setting-section {
+  margin-bottom: 28px;
+}
+
+.setting-section:last-child {
+  margin-bottom: 0;
+}
+
+.setting-section h4 {
+  margin: 0 0 16px 0;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Setting Items */
+.setting-item {
+  margin-bottom: 12px;
+}
+
+.setting-item label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #cbd5e1;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+.setting-item label:hover {
+  background: rgba(148, 163, 184, 0.1);
+}
+
+.setting-item input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--miora-primary, #8b5cf6);
+}
+
+/* Language Selector */
+.language-selector {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.language-btn {
+  flex: 1;
+  min-width: 90px;
+  padding: 12px;
+  background: rgba(148,163,184,0.2);
+  color: #fff;
+  border: 1px solid rgba(148,163,184,0.3);
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.language-btn:hover {
+  background: rgba(148,163,184,0.3);
+  transform: translateY(-2px);
+}
+
+.language-btn.active {
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-color: #10b981;
+  box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+}
+
+/* Theme Grid */
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.theme-option {
+  padding: 16px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  text-align: center;
+}
+
+.theme-option:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+.theme-option.active {
+  border-color: rgba(255,255,255,0.4);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+.theme-option i {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 16px;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.stat-item {
+  padding: 16px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #60a5fa;
+  margin-bottom: 6px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* Action Buttons */
+.setting-action-btn {
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 10px;
+  background: rgba(148, 163, 184, 0.2);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 10px;
+  color: #cbd5e1;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.setting-action-btn:hover {
+  background: rgba(148, 163, 184, 0.3);
+  border-color: rgba(148, 163, 184, 0.5);
+  transform: translateY(-2px);
+}
+
+.setting-action-btn:active {
+  transform: translateY(0);
+}
+
+/* Footer */
+.miora-settings-footer {
+  padding: 16px 24px;
+  background: rgba(15, 23, 42, 0.8);
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.miora-settings-footer small {
+  color: #64748b;
+  font-size: 12px;
+}
+
+
+/* ==========================================
+   MOBILE RESPONSIVE
+   ========================================== */
+
+@media (max-width: 768px) {
+  .miora-settings-content {
+    width: 95%;
+    max-height: 90vh;
+    border-radius: 16px;
+  }
+  
+  .miora-settings-header {
+    padding: 16px 20px;
+  }
+  
+  .miora-settings-header h3 {
+    font-size: 18px;
+  }
+  
+  .miora-settings-body {
+    padding: 20px 16px;
+  }
+  
+  .theme-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .language-selector {
+    flex-direction: column;
+  }
+  
+  .language-btn {
+    flex: none;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .miora-settings-content {
+    width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+    top: 0;
+    left: 0;
+    transform: none;
+  }
+  
+  .miora-settings-header {
+    padding: 14px 16px;
+  }
+  
+  .miora-settings-header h3 {
+    font-size: 16px;
+  }
+  
+  .miora-settings-body {
+    padding: 16px;
+  }
+  
+  .setting-section h4 {
+    font-size: 15px;
+  }
+  
+  .theme-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .theme-option {
+    padding: 14px;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -40%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* Mobile animation override */
+@media (max-width: 480px) {
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    
+    @keyframes slideInRight {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes slideOutRight {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }/* ==========================================
    BOTTOM NAVIGATION - 5 ITEMS ✅
    ========================================== */
 
@@ -3658,11 +4191,12 @@ body.theme-switching * {
   left: 0;
   right: 0;
   display: grid;
+  
   grid-template-columns: repeat(5, 1fr); /* ✅ 5 colonnes */
   gap: 0;
-  background: linear-gradient(135deg, #0e0f13, #1a1d29);
-  backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding: 8px 4px calc(env(safe-area-inset-bottom) + 8px);
   z-index: 3200;
@@ -3812,7 +4346,55 @@ body.theme-switching * {
               0 0 0 2px rgba(14, 15, 19, 0.8);
 }
 
+
+
 /* ==========================================
+   RESPONSIVE - SMALL SCREENS ✅
+   ========================================== */
+
+@media (max-width: 360px) {
+  .nav-btn {
+    padding: 8px 2px;
+    gap: 2px;
+  }
+  
+  .nav-btn .icon {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .nav-btn .label {
+    font-size: 9px;
+  }
+  
+  .icon-miora {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .nav-cart-badge {
+    min-width: 14px;
+    height: 14px;
+    font-size: 8px;
+    top: -6px;
+    right: -8px;
+  }
+}
+
+/* ==========================================
+   DESKTOP MODE ✅
+   ========================================== */
+
+@media (min-width: 1024px) {
+  .bottom-nav {
+    display: none; /* Hidden on desktop */
+  }
+}/* Hide old floating cart button */
+#cdCartFab,
+#cart-toggle,
+.cart-fab {
+  display: none !important;
+}/* ==========================================
    CART DRAWER - COMPLETE RESPONSIVE MODULE
    ========================================== */
 
@@ -4762,335 +5344,6 @@ body.theme-switching * {
 .cd-cart-close:active i {
   transform: translateX(-4px);
 }/* ==========================================
-   PAGINATION SYSTEM
-   ========================================== */
-
-.pagination-container {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 24px 16px;
-  margin-top: 20px;
-  border-top: 1px solid rgba(255,255,255,.08);
-}
-
-/* Pagination info */
-.pagination-info {
-  text-align: center;
-  color: #94a3b8;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-/* Pagination controls */
-.pagination-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-/* Page button base */
-.page-btn {
-  min-width: 40px;
-  height: 40px;
-  padding: 0 12px;
-  border: 1px solid rgba(255,255,255,.1);
-  background: rgba(255,255,255,.03);
-  color: #94a3b8;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-
-.page-btn:hover:not(:disabled) {
-  background: rgba(59,130,246,.15);
-  border-color: rgba(59,130,246,.3);
-  color: #3b82f6;
-  transform: translateY(-2px);
-}
-
-.page-btn:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.page-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-/* Active page */
-.page-btn.active {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  border-color: #3b82f6;
-  color: #fff;
-  font-weight: 700;
-  box-shadow: 0 4px 12px rgba(59,130,246,.3);
-}
-
-.page-btn.active:hover {
-  transform: translateY(-2px);
-}
-
-/* Previous/Next buttons */
-.page-btn.page-prev,
-.page-btn.page-next {
-  min-width: 100px;
-  background: rgba(255,255,255,.05);
-  border: 1px solid rgba(255,255,255,.15);
-}
-
-.page-btn.page-prev:hover:not(:disabled),
-.page-btn.page-next:hover:not(:disabled) {
-  background: rgba(59,130,246,.2);
-  border-color: rgba(59,130,246,.4);
-}
-
-/* Ellipsis */
-.page-ellipsis {
-  min-width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #64748b;
-  font-weight: 700;
-  font-size: 16px;
-  letter-spacing: 2px;
-}
-
-/* Jump to page */
-.pagination-jump {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-  justify-content: center;
-}
-
-.pagination-jump label {
-  font-size: 13px;
-  color: #94a3b8;
-  font-weight: 500;
-}
-
-.pagination-jump input {
-  width: 60px;
-  height: 36px;
-  padding: 0 8px;
-  border: 1px solid rgba(255,255,255,.15);
-  background: rgba(255,255,255,.05);
-  color: #fff;
-  border-radius: 8px;
-  text-align: center;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
-
-.pagination-jump input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  background: rgba(59,130,246,.1);
-}
-
-.pagination-jump button {
-  height: 36px;
-  padding: 0 16px;
-  border: 1px solid rgba(59,130,246,.3);
-  background: rgba(59,130,246,.15);
-  color: #3b82f6;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.pagination-jump button:hover {
-  background: rgba(59,130,246,.25);
-  transform: translateY(-1px);
-}
-
-/* Responsive */
-@media (max-width: 639px) {
-  .pagination-controls {
-    gap: 6px;
-  }
-  
-  .page-btn {
-    min-width: 36px;
-    height: 36px;
-    padding: 0 10px;
-    font-size: 13px;
-  }
-  
-  .page-btn.page-prev,
-  .page-btn.page-next {
-    min-width: 80px;
-    font-size: 13px;
-  }
-  
-  .pagination-jump {
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .pagination-jump input {
-    width: 80px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .pagination-container {
-    padding: 32px 20px;
-  }
-  
-  .page-btn {
-    min-width: 44px;
-    height: 44px;
-    font-size: 15px;
-  }
-}
-
-/* Light theme */
-[data-theme="light"] .page-btn {
-  background: rgba(0,0,0,.03);
-  border-color: rgba(0,0,0,.1);
-  color: #475569;
-}
-
-[data-theme="light"] .page-btn:hover:not(:disabled) {
-  background: rgba(59,130,246,.1);
-  color: #3b82f6;
-}
-
-[data-theme="light"] .pagination-info {
-  color: #64748b;
-}
-
-[data-theme="light"] .pagination-jump input {
-  background: rgba(0,0,0,.03);
-  border-color: rgba(0,0,0,.15);
-  color: #1e293b;
-}/* ==========================================
-   CART BUTTON IN PRODUCT CARDS
-   ========================================== */
-
-.icon-cart {
-  background: linear-gradient(135deg, #10b981, #059669) !important;
-  color: #fff !important;
-  border: none !important;
-  position: relative;
-  overflow: hidden;
-}
-
-.icon-cart::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.3);
-  transform: translate(-50%, -50%);
-  transition: width 0.6s, height 0.6s;
-}
-
-.icon-cart:active::before {
-  width: 300px;
-  height: 300px;
-}
-
-.icon-cart:hover {
-  background: linear-gradient(135deg, #059669, #047857) !important;
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 8px 20px rgba(16,185,129,0.4);
-}
-
-.icon-cart i {
-  font-size: 18px;
-  transition: transform 0.3s ease;
-}
-
-.icon-cart:active i {
-  transform: scale(0.9);
-}
-
-/* Animation pulse au hover */
-@keyframes cartPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-}
-
-.icon-cart:hover i {
-  animation: cartPulse 0.6s ease infinite;
-}/* ==========================================
-   BOTTOM NAV - AGENT MIORA BUTTON
-   ========================================== */
-
-.nav-btn .icon-miora {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid transparent;
-  transition: all 0.3s ease;
-}
-
-.nav-btn:hover .icon-miora {
-  border-color: #667eea;
-  transform: scale(1.1) rotate(5deg);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.nav-btn.active .icon-miora {
-  border-color: #667eea;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
-  animation: pulse-miora 2s infinite;
-}
-
-@keyframes pulse-miora {
-  0%, 100% {
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgba(102, 126, 234, 0.1);
-  }
-}
-
-/* Notification badge pour Agent Miora */
-.nav-btn .miora-notification {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 8px;
-  height: 8px;
-  background: #10b981;
-  border-radius: 50%;
-  border: 2px solid #0a0e17;
-  animation: pulse-notification 2s infinite;
-}
-
-@keyframes pulse-notification {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.5;
-    transform: scale(1.2);
-  }
-}/* ==========================================
    AGENT MIORA - CHAT WINDOW COMPLETE
    ========================================== */
 
@@ -5806,107 +6059,6 @@ body.theme-switching * {
     height: 700px;
     right: 32px;
     bottom: 100px;
-  }
-}/* Settings Panel */
-.agent-settings-panel {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 10000;
-  display: none;
-}
-
-.agent-settings-panel.show {
-  display: block;
-}
-
-.agent-settings-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
-}
-
-.agent-settings-content {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 90%;
-  max-width: 400px;
-  background: #0f1216;
-  overflow-y: auto;
-  animation: slideInRight 0.3s ease;
-}
-
-@keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-.agent-settings-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.agent-settings-close {
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: 50%;
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.agent-settings-body {
-  padding: 20px;
-}
-
-.setting-section {
-  margin-bottom: 24px;
-}
-
-.setting-section h4 {
-  margin-bottom: 12px;
-  color: #fff;
-  font-size: 16px;
-}
-
-.setting-item {
-  margin-bottom: 12px;
-}
-
-/* Responsive */
-@media (min-width: 768px) {
-  .agent-chat-window {
-    bottom: 80px;
-    left: auto;
-    right: 20px;
-    width: 400px;
-    height: 600px;
-    border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  }
-  
-  .agent-chat-window[aria-hidden="false"] {
-    transform: translateY(0) scale(1);
-  }
-  
-  .agent-chat-window[aria-hidden="true"] {
-    transform: translateY(20px) scale(0.95);
   }
 }/* Lazy loading for images */
 .agent-message-image img {
