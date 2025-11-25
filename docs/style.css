@@ -4347,7 +4347,63 @@ section.active {
 }
 
 
+/* ==========================================
+   BOTTOM NAV - AGENT MIORA BUTTON
+   ========================================== */
 
+.nav-btn .icon-miora {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.nav-btn:hover .icon-miora {
+  border-color: #667eea;
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.nav-btn.active .icon-miora {
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+  animation: pulse-miora 2s infinite;
+}
+
+@keyframes pulse-miora {
+  0%, 100% {
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(102, 126, 234, 0.1);
+  }
+}
+
+/* Notification badge pour Agent Miora */
+.nav-btn .miora-notification {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  border: 2px solid #0a0e17;
+  animation: pulse-notification 2s infinite;
+}
+
+@keyframes pulse-notification {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}
 /* ==========================================
    RESPONSIVE - SMALL SCREENS ✅
    ========================================== */
@@ -5343,62 +5399,6 @@ section.active {
 
 .cd-cart-close:active i {
   transform: translateX(-4px);
-}/* ==========================================
-   BOTTOM NAV - AGENT MIORA BUTTON
-   ========================================== */
-
-.nav-btn .icon-miora {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid transparent;
-  transition: all 0.3s ease;
-}
-
-.nav-btn:hover .icon-miora {
-  border-color: #667eea;
-  transform: scale(1.1) rotate(5deg);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.nav-btn.active .icon-miora {
-  border-color: #667eea;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
-  animation: pulse-miora 2s infinite;
-}
-
-@keyframes pulse-miora {
-  0%, 100% {
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgba(102, 126, 234, 0.1);
-  }
-}
-
-/* Notification badge pour Agent Miora */
-.nav-btn .miora-notification {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 8px;
-  height: 8px;
-  background: #10b981;
-  border-radius: 50%;
-  border: 2px solid #0a0e17;
-  animation: pulse-notification 2s infinite;
-}
-
-@keyframes pulse-notification {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.5;
-    transform: scale(1.2);
-  }
 }/* ==========================================
    AGENT MIORA - CHAT WINDOW COMPLETE
    ========================================== */
