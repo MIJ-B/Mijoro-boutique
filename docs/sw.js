@@ -429,7 +429,7 @@ self.addEventListener('push', function(event) {
   log('📨 Push notification received');
   
   let notificationData = {
-    title: 'Mijoro Boutique', // ✅ APP NAME tsara
+    title: 'Mijoro Boutique',
     body: '🆕 Nouveau produit disponible!',
     icon: DEFAULT_ICON,
     badge: DEFAULT_BADGE,
@@ -450,10 +450,9 @@ self.addEventListener('push', function(event) {
       const payload = event.data.json();
       log('📦 Payload:', payload);
       
-      // Merge payload mais garde "Mijoro Boutique" comme titre si tsy misy
       notificationData = {
         ...notificationData,
-        title: payload.title || 'Mijoro Boutique', // ✅
+        title: payload.title || 'Mijoro Boutique',
         body: payload.body || notificationData.body,
         icon: payload.image || payload.icon || DEFAULT_ICON,
         image: payload.image,
@@ -470,6 +469,7 @@ self.addEventListener('push', function(event) {
     self.registration.showNotification(notificationData.title, notificationData)
   );
 });
+
 /* ==========================================
    NOTIFICATION CLICK
    ========================================== */
@@ -485,27 +485,26 @@ self.addEventListener('notificationclick', function(event) {
     return;
   }
   
-if (data.url) {
-  url = data.url;
-} else if (data.productId) {
-  url = `https://mij-b.github.io/Mijoro-boutique/?product=${data.productId}#shop`; // ✅ = tsy :
-}
+  if (data.url) {
+    url = data.url;
+  } else if (data.productId) {
+    url = `https://mij-b.github.io/Mijoro-boutique/?product=${data.productId}#shop`;
+  }
   
   log('🔗 Opening:', url);
   
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then((windowClients) => {
-        for (let client of windowClients) {
-          if (client.url.includes('mij-b.github.io/Mijoro-boutique/') && 'focus' in client) {
-            return client.navigate(url).then(() => client.focus());
-          }
+    .then((windowClients) => {
+      for (let client of windowClients) {
+        if (client.url.includes('mij-b.github.io/Mijoro-boutique') && 'focus' in client) {
+          return client.navigate(url).then(() => client.focus());
         }
-        return clients.openWindow(url);
-      })
+      }
+      return clients.openWindow(url);
+    })
   );
 });
-
 /* ==========================================
    BACKGROUND SYNC
    ========================================== */
