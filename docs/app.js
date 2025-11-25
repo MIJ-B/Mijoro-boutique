@@ -16745,6 +16745,400 @@ window.addEventListener('unhandledrejection', function(event) {
 });
 
 console.log('✅ [Miora] Error handlers installed');/* ==========================================
+   ADVANCED PWA CAPABILITIES ✅
+   - File Handlers (PDF/Images)
+   - Protocol Handlers (Deep Linking)
+   - Widgets (Home Screen)
+   ========================================== */
+
+(function initAdvancedCapabilities() {
+  'use strict';
+  
+  console.log('[PWA] 🚀 Initializing Advanced Capabilities...');
+  
+  // ========================================
+  // 1. FILE HANDLERS - Open PDF/Images
+  // ========================================
+  
+  if ('launchQueue' in window) {
+    console.log('[File Handler] ✓ Supported');
+    
+    launchQueue.setConsumer(async (launchParams) => {
+      console.log('[File Handler] 📂 Launch params received');
+      
+      if (!launchParams.files || launchParams.files.length === 0) {
+        console.log('[File Handler] No files');
+        return;
+      }
+      
+      try {
+        for (const fileHandle of launchParams.files) {
+          await handleOpenedFile(fileHandle);
+        }
+      } catch (e) {
+        console.error('[File Handler] Error:', e);
+        showToast('❌ Erreur lors de l\'ouverture du fichier', 'error');
+      }
+    });
+  } else {
+    console.warn('[File Handler] ⚠️ Not supported');
+  }
+  
+  async function handleOpenedFile(fileHandle) {
+    try {
+      console.log('[File Handler] 📄 Processing file...');
+      
+      const file = await fileHandle.getFile();
+      const fileType = file.type;
+      const fileName = file.name;
+      
+      console.log('[File Handler] File:', fileName, 'Type:', fileType);
+      
+      // PDF Handler
+      if (fileType === 'application/pdf') {
+        const url = URL.createObjectURL(file);
+        
+        // Show in modal
+        const modal = document.getElementById('info-modal');
+        const title = document.getElementById('info-title');
+        const content = document.getElementById('info-content');
+        
+        if (modal && title && content) {
+          title.textContent = '📄 ' + fileName;
+          content.innerHTML = `
+            <div style="width:100%;height:70vh;display:flex;flex-direction:column;gap:12px">
+              <embed 
+                type="application/pdf" 
+                src="${url}#toolbar=1&navpanes=0&statusbar=0" 
+                style="width:100%;flex:1;border-radius:10px;border:1px solid rgba(255,255,255,.12)">
+              <div style="display:flex;gap:8px">
+                <button type="button" 
+                        class="param-btn" 
+                        onclick="window.open('${url}', '_blank')"
+                        style="flex:1;background:linear-gradient(135deg,#3b82f6,#2563eb)">
+                  <i class="fa-solid fa-external-link"></i> Ouvrir dans un nouvel onglet
+                </button>
+                <button type="button" 
+                        class="param-btn" 
+                        onclick="downloadFile('${url}', '${fileName}')"
+                        style="flex:1;background:linear-gradient(135deg,#10b981,#059669)">
+                  <i class="fa-solid fa-download"></i> Télécharger
+                </button>
+              </div>
+            </div>
+          `;
+          
+          modal.classList.add('show');
+          modal.setAttribute('aria-hidden', 'false');
+          modal.style.display = 'flex';
+          
+          showToast('✅ PDF ouvert: ' + fileName, 'success');
+        }
+      }
+      
+      // Image Handler
+      else if (fileType.startsWith('image/')) {
+        const url = URL.createObjectURL(file);
+        
+        const modal = document.getElementById('info-modal');
+        const title = document.getElementById('info-title');
+        const content = document.getElementById('info-content');
+        
+        if (modal && title && content) {
+          title.textContent = '🖼️ ' + fileName;
+          content.innerHTML = `
+            <div style="width:100%;display:flex;flex-direction:column;gap:12px">
+              <img 
+                src="${url}" 
+                alt="${fileName}" 
+                style="width:100%;height:auto;max-height:70vh;object-fit:contain;border-radius:10px;border:1px solid rgba(255,255,255,.12)">
+              <div style="display:flex;gap:8px">
+                <button type="button" 
+                        class="param-btn" 
+                        onclick="window.open('${url}', '_blank')"
+                        style="flex:1;background:linear-gradient(135deg,#3b82f6,#2563eb)">
+                  <i class="fa-solid fa-external-link"></i> Ouvrir
+                </button>
+                <button type="button" 
+                        class="param-btn" 
+                        onclick="downloadFile('${url}', '${fileName}')"
+                        style="flex:1;background:linear-gradient(135deg,#10b981,#059669)">
+                  <i class="fa-solid fa-download"></i> Télécharger
+                </button>
+              </div>
+            </div>
+          `;
+          
+          modal.classList.add('show');
+          modal.setAttribute('aria-hidden', 'false');
+          modal.style.display = 'flex';
+          
+          showToast('✅ Image ouverte: ' + fileName, 'success');
+        }
+      }
+      
+      else {
+        showToast('⚠️ Type de fichier non supporté', 'warning');
+      }
+      
+    } catch (e) {
+      console.error('[File Handler] Processing error:', e);
+      showToast('❌ Erreur: ' + e.message, 'error');
+    }
+  }
+  
+  // Download helper
+  window.downloadFile = function(url, filename) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    showToast('⬇️ Téléchargement démarré', 'success');
+  };
+  
+  // ========================================
+  // 2. PROTOCOL HANDLERS - Deep Linking
+  // ========================================
+  
+  function handleProtocolUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+    const protocolUrl = urlParams.get('url');
+    
+    if (action === 'protocol' && protocolUrl) {
+      console.log('[Protocol] 🔗 Deep link detected:', protocolUrl);
+      
+      try {
+        // Parse: web+mijoro://product/abc123
+        const url = decodeURIComponent(protocolUrl);
+        
+        // Product deep link
+        const productMatch = url.match(/product\/([^\/\?]+)/);
+        if (productMatch) {
+          const productId = productMatch[1];
+          console.log('[Protocol] 📦 Opening product:', productId);
+          
+          // Navigate to shop
+          if (typeof showSection === 'function') {
+            showSection('shop');
+          }
+          
+          // Open product modal
+          setTimeout(() => {
+            if (typeof showProduct === 'function') {
+              showProduct(productId);
+            }
+          }, 500);
+          
+          showToast('✅ Produit ouvert depuis le lien', 'success');
+          return;
+        }
+        
+        // Cart deep link
+        if (url.includes('cart')) {
+          console.log('[Protocol] 🛒 Opening cart');
+          
+          if (typeof window.CartAPI !== 'undefined') {
+            window.CartAPI.open();
+          }
+          
+          showToast('✅ Panier ouvert', 'success');
+          return;
+        }
+        
+        // Category deep link
+        const categoryMatch = url.match(/category\/([^\/\?]+)/);
+        if (categoryMatch) {
+          const category = categoryMatch[1];
+          console.log('[Protocol] 🏷️ Opening category:', category);
+          
+          if (typeof showSection === 'function') {
+            showSection('shop');
+          }
+          
+          setTimeout(() => {
+            if (typeof renderProducts === 'function') {
+              renderProducts(category, '');
+            }
+          }, 500);
+          
+          showToast('✅ Catégorie ouverte: ' + category, 'success');
+          return;
+        }
+        
+        // Default: open shop
+        console.log('[Protocol] Opening shop (default)');
+        if (typeof showSection === 'function') {
+          showSection('shop');
+        }
+        
+      } catch (e) {
+        console.error('[Protocol] Parse error:', e);
+        showToast('❌ Lien invalide', 'error');
+      }
+    }
+  }
+  
+  // Check on load
+  handleProtocolUrl();
+  
+  // Expose for external use
+  window.handleDeepLink = function(url) {
+    window.location.href = '/?action=protocol&url=' + encodeURIComponent(url);
+  };
+  
+  // ========================================
+  // 3. WIDGETS - Data Generation
+  // ========================================
+  
+  async function generateWidgetData() {
+    try {
+      console.log('[Widgets] 📊 Generating data...');
+      
+      // Quick Order Widget Data
+      const qoProducts = [];
+      if (typeof window.QOManagement !== 'undefined') {
+        const products = window.QOManagement.getProducts();
+        products.slice(0, 6).forEach(p => {
+          qoProducts.push({
+            id: p.id,
+            title: p.title,
+            price: p.price,
+            image: p.image
+          });
+        });
+      }
+      
+      const qoData = {
+        template: 'quick-order',
+        data: {
+          title: 'Quick Order',
+          items: qoProducts.length,
+          products: qoProducts
+        }
+      };
+      
+      // Cart Widget Data
+      const cartItems = [];
+      let cartTotal = 0;
+      
+      if (typeof window.CartAPI !== 'undefined' && window.CartAPI.state) {
+        window.CartAPI.state.items.forEach(item => {
+          cartItems.push({
+            title: item.name || item.title,
+            qty: item.qty,
+            price: item.price
+          });
+          cartTotal += item.price * item.qty;
+        });
+      }
+      
+      const cartData = {
+        template: 'cart',
+        data: {
+          title: 'Panier',
+          count: cartItems.length,
+          total: cartTotal,
+          items: cartItems
+        }
+      };
+      
+      // Save to localStorage (fallback for widget data)
+      try {
+        localStorage.setItem('widget-qo', JSON.stringify(qoData));
+        localStorage.setItem('widget-cart', JSON.stringify(cartData));
+      } catch (e) {}
+      
+      console.log('[Widgets] ✅ Data generated');
+      
+    } catch (e) {
+      console.error('[Widgets] Generation error:', e);
+    }
+  }
+  
+  // Generate on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(generateWidgetData, 2000);
+  });
+  
+  // Regenerate on cart changes
+  if (typeof window.CartAPI !== 'undefined') {
+    const originalAdd = window.CartAPI.add;
+    window.CartAPI.add = function(...args) {
+      const result = originalAdd.apply(this, args);
+      setTimeout(generateWidgetData, 500);
+      return result;
+    };
+  }
+  
+  // ========================================
+  // TOAST HELPER (reuse existing or create)
+  // ========================================
+  
+  function showToast(message, type = 'success') {
+    // Remove existing
+    document.querySelectorAll('.capability-toast').forEach(t => t.remove());
+    
+    const toast = document.createElement('div');
+    toast.className = 'capability-toast';
+    toast.textContent = message;
+    
+    const colors = {
+      'success': 'linear-gradient(135deg, #10b981, #059669)',
+      'error': 'linear-gradient(135deg, #ef4444, #dc2626)',
+      'warning': 'linear-gradient(135deg, #f59e0b, #d97706)'
+    };
+    
+    toast.style.cssText = `
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: ${colors[type] || colors.success};
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 14px;
+      z-index: 9999;
+      animation: toastIn 0.3s ease;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      max-width: 90vw;
+      text-align: center;
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.style.animation = 'toastOut 0.3s ease';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+  
+  console.log('[PWA] ✅ Advanced Capabilities Ready');
+  
+})();
+
+// ========================================
+// TOAST ANIMATIONS
+// ========================================
+
+if (!document.getElementById('capability-toast-styles')) {
+  const styles = document.createElement('style');
+  styles.id = 'capability-toast-styles';
+  styles.textContent = `
+    @keyframes toastIn {
+      from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+      to { transform: translateX(-50%) translateY(0); opacity: 1; }
+    }
+    
+    @keyframes toastOut {
+      from { transform: translateX(-50%) translateY(0); opacity: 1; }
+      to { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+    }
+  `;
+  document.head.appendChild(styles);
+}/* ==========================================
    REAL-TIME PRODUCTS SYNC ✅
    ========================================== */
 
@@ -17435,398 +17829,3 @@ console.log('✅ [Miora] Error handlers installed');/* =========================
   console.log('[RT Status] ✅ Indicator ready (top right)');
   
 })();
-/* ==========================================
-   ADVANCED PWA CAPABILITIES ✅
-   - File Handlers (PDF/Images)
-   - Protocol Handlers (Deep Linking)
-   - Widgets (Home Screen)
-   ========================================== */
-
-(function initAdvancedCapabilities() {
-  'use strict';
-  
-  console.log('[PWA] 🚀 Initializing Advanced Capabilities...');
-  
-  // ========================================
-  // 1. FILE HANDLERS - Open PDF/Images
-  // ========================================
-  
-  if ('launchQueue' in window) {
-    console.log('[File Handler] ✓ Supported');
-    
-    launchQueue.setConsumer(async (launchParams) => {
-      console.log('[File Handler] 📂 Launch params received');
-      
-      if (!launchParams.files || launchParams.files.length === 0) {
-        console.log('[File Handler] No files');
-        return;
-      }
-      
-      try {
-        for (const fileHandle of launchParams.files) {
-          await handleOpenedFile(fileHandle);
-        }
-      } catch (e) {
-        console.error('[File Handler] Error:', e);
-        showToast('❌ Erreur lors de l\'ouverture du fichier', 'error');
-      }
-    });
-  } else {
-    console.warn('[File Handler] ⚠️ Not supported');
-  }
-  
-  async function handleOpenedFile(fileHandle) {
-    try {
-      console.log('[File Handler] 📄 Processing file...');
-      
-      const file = await fileHandle.getFile();
-      const fileType = file.type;
-      const fileName = file.name;
-      
-      console.log('[File Handler] File:', fileName, 'Type:', fileType);
-      
-      // PDF Handler
-      if (fileType === 'application/pdf') {
-        const url = URL.createObjectURL(file);
-        
-        // Show in modal
-        const modal = document.getElementById('info-modal');
-        const title = document.getElementById('info-title');
-        const content = document.getElementById('info-content');
-        
-        if (modal && title && content) {
-          title.textContent = '📄 ' + fileName;
-          content.innerHTML = `
-            <div style="width:100%;height:70vh;display:flex;flex-direction:column;gap:12px">
-              <embed 
-                type="application/pdf" 
-                src="${url}#toolbar=1&navpanes=0&statusbar=0" 
-                style="width:100%;flex:1;border-radius:10px;border:1px solid rgba(255,255,255,.12)">
-              <div style="display:flex;gap:8px">
-                <button type="button" 
-                        class="param-btn" 
-                        onclick="window.open('${url}', '_blank')"
-                        style="flex:1;background:linear-gradient(135deg,#3b82f6,#2563eb)">
-                  <i class="fa-solid fa-external-link"></i> Ouvrir dans un nouvel onglet
-                </button>
-                <button type="button" 
-                        class="param-btn" 
-                        onclick="downloadFile('${url}', '${fileName}')"
-                        style="flex:1;background:linear-gradient(135deg,#10b981,#059669)">
-                  <i class="fa-solid fa-download"></i> Télécharger
-                </button>
-              </div>
-            </div>
-          `;
-          
-          modal.classList.add('show');
-          modal.setAttribute('aria-hidden', 'false');
-          modal.style.display = 'flex';
-          
-          showToast('✅ PDF ouvert: ' + fileName, 'success');
-        }
-      }
-      
-      // Image Handler
-      else if (fileType.startsWith('image/')) {
-        const url = URL.createObjectURL(file);
-        
-        const modal = document.getElementById('info-modal');
-        const title = document.getElementById('info-title');
-        const content = document.getElementById('info-content');
-        
-        if (modal && title && content) {
-          title.textContent = '🖼️ ' + fileName;
-          content.innerHTML = `
-            <div style="width:100%;display:flex;flex-direction:column;gap:12px">
-              <img 
-                src="${url}" 
-                alt="${fileName}" 
-                style="width:100%;height:auto;max-height:70vh;object-fit:contain;border-radius:10px;border:1px solid rgba(255,255,255,.12)">
-              <div style="display:flex;gap:8px">
-                <button type="button" 
-                        class="param-btn" 
-                        onclick="window.open('${url}', '_blank')"
-                        style="flex:1;background:linear-gradient(135deg,#3b82f6,#2563eb)">
-                  <i class="fa-solid fa-external-link"></i> Ouvrir
-                </button>
-                <button type="button" 
-                        class="param-btn" 
-                        onclick="downloadFile('${url}', '${fileName}')"
-                        style="flex:1;background:linear-gradient(135deg,#10b981,#059669)">
-                  <i class="fa-solid fa-download"></i> Télécharger
-                </button>
-              </div>
-            </div>
-          `;
-          
-          modal.classList.add('show');
-          modal.setAttribute('aria-hidden', 'false');
-          modal.style.display = 'flex';
-          
-          showToast('✅ Image ouverte: ' + fileName, 'success');
-        }
-      }
-      
-      else {
-        showToast('⚠️ Type de fichier non supporté', 'warning');
-      }
-      
-    } catch (e) {
-      console.error('[File Handler] Processing error:', e);
-      showToast('❌ Erreur: ' + e.message, 'error');
-    }
-  }
-  
-  // Download helper
-  window.downloadFile = function(url, filename) {
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    showToast('⬇️ Téléchargement démarré', 'success');
-  };
-  
-  // ========================================
-  // 2. PROTOCOL HANDLERS - Deep Linking
-  // ========================================
-  
-  function handleProtocolUrl() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const action = urlParams.get('action');
-    const protocolUrl = urlParams.get('url');
-    
-    if (action === 'protocol' && protocolUrl) {
-      console.log('[Protocol] 🔗 Deep link detected:', protocolUrl);
-      
-      try {
-        // Parse: web+mijoro://product/abc123
-        const url = decodeURIComponent(protocolUrl);
-        
-        // Product deep link
-        const productMatch = url.match(/product\/([^\/\?]+)/);
-        if (productMatch) {
-          const productId = productMatch[1];
-          console.log('[Protocol] 📦 Opening product:', productId);
-          
-          // Navigate to shop
-          if (typeof showSection === 'function') {
-            showSection('shop');
-          }
-          
-          // Open product modal
-          setTimeout(() => {
-            if (typeof showProduct === 'function') {
-              showProduct(productId);
-            }
-          }, 500);
-          
-          showToast('✅ Produit ouvert depuis le lien', 'success');
-          return;
-        }
-        
-        // Cart deep link
-        if (url.includes('cart')) {
-          console.log('[Protocol] 🛒 Opening cart');
-          
-          if (typeof window.CartAPI !== 'undefined') {
-            window.CartAPI.open();
-          }
-          
-          showToast('✅ Panier ouvert', 'success');
-          return;
-        }
-        
-        // Category deep link
-        const categoryMatch = url.match(/category\/([^\/\?]+)/);
-        if (categoryMatch) {
-          const category = categoryMatch[1];
-          console.log('[Protocol] 🏷️ Opening category:', category);
-          
-          if (typeof showSection === 'function') {
-            showSection('shop');
-          }
-          
-          setTimeout(() => {
-            if (typeof renderProducts === 'function') {
-              renderProducts(category, '');
-            }
-          }, 500);
-          
-          showToast('✅ Catégorie ouverte: ' + category, 'success');
-          return;
-        }
-        
-        // Default: open shop
-        console.log('[Protocol] Opening shop (default)');
-        if (typeof showSection === 'function') {
-          showSection('shop');
-        }
-        
-      } catch (e) {
-        console.error('[Protocol] Parse error:', e);
-        showToast('❌ Lien invalide', 'error');
-      }
-    }
-  }
-  
-  // Check on load
-  handleProtocolUrl();
-  
-  // Expose for external use
-  window.handleDeepLink = function(url) {
-    window.location.href = '/?action=protocol&url=' + encodeURIComponent(url);
-  };
-  
-  // ========================================
-  // 3. WIDGETS - Data Generation
-  // ========================================
-  
-  async function generateWidgetData() {
-    try {
-      console.log('[Widgets] 📊 Generating data...');
-      
-      // Quick Order Widget Data
-      const qoProducts = [];
-      if (typeof window.QOManagement !== 'undefined') {
-        const products = window.QOManagement.getProducts();
-        products.slice(0, 6).forEach(p => {
-          qoProducts.push({
-            id: p.id,
-            title: p.title,
-            price: p.price,
-            image: p.image
-          });
-        });
-      }
-      
-      const qoData = {
-        template: 'quick-order',
-        data: {
-          title: 'Quick Order',
-          items: qoProducts.length,
-          products: qoProducts
-        }
-      };
-      
-      // Cart Widget Data
-      const cartItems = [];
-      let cartTotal = 0;
-      
-      if (typeof window.CartAPI !== 'undefined' && window.CartAPI.state) {
-        window.CartAPI.state.items.forEach(item => {
-          cartItems.push({
-            title: item.name || item.title,
-            qty: item.qty,
-            price: item.price
-          });
-          cartTotal += item.price * item.qty;
-        });
-      }
-      
-      const cartData = {
-        template: 'cart',
-        data: {
-          title: 'Panier',
-          count: cartItems.length,
-          total: cartTotal,
-          items: cartItems
-        }
-      };
-      
-      // Save to localStorage (fallback for widget data)
-      try {
-        localStorage.setItem('widget-qo', JSON.stringify(qoData));
-        localStorage.setItem('widget-cart', JSON.stringify(cartData));
-      } catch (e) {}
-      
-      console.log('[Widgets] ✅ Data generated');
-      
-    } catch (e) {
-      console.error('[Widgets] Generation error:', e);
-    }
-  }
-  
-  // Generate on page load
-  document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(generateWidgetData, 2000);
-  });
-  
-  // Regenerate on cart changes
-  if (typeof window.CartAPI !== 'undefined') {
-    const originalAdd = window.CartAPI.add;
-    window.CartAPI.add = function(...args) {
-      const result = originalAdd.apply(this, args);
-      setTimeout(generateWidgetData, 500);
-      return result;
-    };
-  }
-  
-  // ========================================
-  // TOAST HELPER (reuse existing or create)
-  // ========================================
-  
-  function showToast(message, type = 'success') {
-    // Remove existing
-    document.querySelectorAll('.capability-toast').forEach(t => t.remove());
-    
-    const toast = document.createElement('div');
-    toast.className = 'capability-toast';
-    toast.textContent = message;
-    
-    const colors = {
-      'success': 'linear-gradient(135deg, #10b981, #059669)',
-      'error': 'linear-gradient(135deg, #ef4444, #dc2626)',
-      'warning': 'linear-gradient(135deg, #f59e0b, #d97706)'
-    };
-    
-    toast.style.cssText = `
-      position: fixed;
-      bottom: 100px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: ${colors[type] || colors.success};
-      color: #fff;
-      padding: 12px 24px;
-      border-radius: 999px;
-      font-weight: 700;
-      font-size: 14px;
-      z-index: 9999;
-      animation: toastIn 0.3s ease;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-      max-width: 90vw;
-      text-align: center;
-    `;
-    
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-      toast.style.animation = 'toastOut 0.3s ease';
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
-  }
-  
-  console.log('[PWA] ✅ Advanced Capabilities Ready');
-  
-})();
-
-// ========================================
-// TOAST ANIMATIONS
-// ========================================
-
-if (!document.getElementById('capability-toast-styles')) {
-  const styles = document.createElement('style');
-  styles.id = 'capability-toast-styles';
-  styles.textContent = `
-    @keyframes toastIn {
-      from { transform: translateX(-50%) translateY(20px); opacity: 0; }
-      to { transform: translateX(-50%) translateY(0); opacity: 1; }
-    }
-    
-    @keyframes toastOut {
-      from { transform: translateX(-50%) translateY(0); opacity: 1; }
-      to { transform: translateX(-50%) translateY(-20px); opacity: 0; }
-    }
-  `;
-  document.head.appendChild(styles);
-}
