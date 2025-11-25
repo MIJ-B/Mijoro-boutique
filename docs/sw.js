@@ -423,19 +423,26 @@ function offlineFallback(request) {
    ========================================== */
 
 const DEFAULT_ICON = './icons/android-launchericon-192-192.png';
-const DEFAULT_BADGE = './icons/512×512-monochrome.png';
+const DEFAULT_BADGE = './icons/512x512-monochrome.png';
 
 self.addEventListener('push', function(event) {
   log('📨 Push notification received');
   
   let notificationData = {
-    title: '🆕 Nouveau produit!',
-    body: 'Découvrez les nouveautés sur Mijoro',
+    title: 'Mijoro Boutique', // ✅ APP NAME tsara
+    body: '🆕 Nouveau produit disponible!',
     icon: DEFAULT_ICON,
     badge: DEFAULT_BADGE,
+    tag: 'mijoro-notification',
     requireInteraction: false,
     vibrate: [200, 100, 200],
-    data: {}
+    data: {
+      url: '/Mijoro-boutique/'
+    },
+    actions: [
+      { action: 'view', title: '👀 Voir', icon: DEFAULT_ICON },
+      { action: 'dismiss', title: '✖️ Fermer' }
+    ]
   };
   
   if (event.data) {
@@ -443,15 +450,15 @@ self.addEventListener('push', function(event) {
       const payload = event.data.json();
       log('📦 Payload:', payload);
       
+      // Merge payload mais garde "Mijoro Boutique" comme titre si tsy misy
       notificationData = {
         ...notificationData,
-        ...payload,
+        title: payload.title || 'Mijoro Boutique', // ✅
+        body: payload.body || notificationData.body,
         icon: payload.image || payload.icon || DEFAULT_ICON,
         image: payload.image,
-        actions: payload.actions || [
-          { action: 'view', title: '👀 Voir', icon: DEFAULT_ICON },
-          { action: 'dismiss', title: '✖️ Fermer' }
-        ]
+        data: payload.data || notificationData.data,
+        actions: payload.actions || notificationData.actions
       };
       
     } catch (err) {
@@ -463,7 +470,6 @@ self.addEventListener('push', function(event) {
     self.registration.showNotification(notificationData.title, notificationData)
   );
 });
-
 /* ==========================================
    NOTIFICATION CLICK
    ========================================== */
@@ -479,11 +485,11 @@ self.addEventListener('notificationclick', function(event) {
     return;
   }
   
-  if (data.url) {
-    url = data.url;
-  } else if (data.productId) {
-    url: `https://mij-b.github.io/Mijoro-boutique/?product=${data.productId}#shop`;
-  }
+if (data.url) {
+  url = data.url;
+} else if (data.productId) {
+  url = `https://mij-b.github.io/Mijoro-boutique/?product=${data.productId}#shop`; // ✅ = tsy :
+}
   
   log('🔗 Opening:', url);
   
