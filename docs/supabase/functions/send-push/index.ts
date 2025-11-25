@@ -12,7 +12,7 @@ const VAPID_PUBLIC_KEY = "BL8QmGLYoAXQnhXStyuriTFZF_hsIMkHpuxwmRUaCVVRWuyRN5cICB
 const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY");
 
 // ✅ Icônes et images par défaut
-const DEFAULT_BADGE = "https://mij-b.github.io/Mijoro-boutique/icons/512×512-monochrome.png";
+const DEFAULT_BADGE = "https://mij-b.github.io/Mijoro-boutique/icons/512x512-monochrome.png";
 const DEFAULT_ICON = "https://mij-b.github.io/Mijoro-boutique/icons/android-launchericon-192-192.png";
 const FALLBACK_IMAGE = "https://i.ibb.co/kVQxwznY/IMG-20251104-074641.jpg";
 
