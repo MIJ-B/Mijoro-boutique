@@ -105,72 +105,16 @@ async function getProductsByCategory(category: string, limit: number = 5) {
   }
 }
 
-// Detect query type from message (improve as needed)
-function detectQueryType(message: string) {
-  const msg = (message || "").toLowerCase();
+// ✅ REMOVED: Product detection - Agent Miora is general purpose only
+// No product search, no categories, no e-commerce features
+// All queries go directly to AI model
 
-  // Search keywords
-  if (/mitady|cherche|search|find|te-hikaroka|mila/i.test(msg)) {
-    const match = msg.match(/mitady\s+(.+)|cherche\s+(.+)|search\s+(.+)|find\s+(.+)/i);
-    if (match) {
-      const query = match[1] || match[2] || match[3] || match[4];
-      return { type: 'search', query: query?.trim() };
-    }
-    return { type: 'search', query: msg };
-  }
-
-  // Free products
-  if (/maimaim.?poana|maimaimpoana|gratuit|free|tsy\s+mandoa|aza\s+mandoa/i.test(msg)) {
-    return { type: 'free' };
-  }
-
-  // Category hints
-  if (/ebook/i.test(msg)) return { type: 'category', category: 'ebook' };
-  if (/video/i.test(msg)) return { type: 'category', category: 'video' };
-  if (/app|jeux|jeu/i.test(msg)) return { type: 'category', category: 'apps' };
-
-  return null;
-}
-
-// Normalize products for frontend (add add_to_cart payload + short_description)
-function normalizeProducts(products: any[]) {
-  return (products || []).map((p: any) => {
-    const priceNumber = p?.price !== undefined ? Number(p.price) : 0;
-    const isFree = p?.is_free === true || priceNumber === 0;
-    const short_description = p?.description ? String(p.description).slice(0, 140) : '';
-    return {
-      id: p.id,
-      title: p.title,
-      price: priceNumber,
-      priceText: isFree ? '✨ MAIMAIM-POANA' : `${priceNumber.toLocaleString()} AR`,
-      is_free: isFree,
-      short_description,
-      category: p.category || null,
-      stock: p.stock ?? null,
-      slug: p.slug ?? null,
-      // frontend should POST this payload to /api/cart or dispatch event
-      add_to_cart_payload: { productId: p.id, qty: 1 }
-    };
-  });
-}
+// ✅ REMOVED: normalizeProducts - Agent Miora doesn't handle products
 
 // Build human-friendly message while keeping consistency
-function buildHumanMessage(products: any[], queryType: string) {
-  if (!products || products.length === 0) {
-    return "❌ Tsy nahita produit. Manandrama fanontaniana hafa toy ny: mitady [nom produit], maimaim-poana (gratuit), ebook, video, apps";
-  }
+// ✅ REMOVED: buildHumanMessage - Agent Miora uses AI responses only
 
-  let header = '';
-  if (queryType === 'search') header = `🔍 Nahita produit ${products.length}:`;
-  else if (queryType === 'free') header = `🎁 Produits maimaim-poana (${products.length}):`;
-  else header = `📦 Produits (${products.length}):`;
-
-  let body = products.map((p, i) => {
-    return `${i + 1}. ${p.title} — ${p.priceText}\n   ${p.short_description || ''}`.trim();
-  }).join('\n\n');
-
-  return `${header}\n\n${body}\n\n💡 Azonao atao ny manoratra \"Ajouter au panier\" na tsindrio ny bouton ao amin'ny chat.`;
-}
+  // ✅ REMOVED: buildHumanMessage - Agent Miora uses AI responses only
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -181,16 +125,17 @@ serve(async (req) => {
 
   // Health check
   if (url.pathname === "/" || url.pathname === "" || req.method === 'GET') {
-    return new Response(
-      JSON.stringify({
-        status: "online",
-        message: "Miora AI Edge Function Running",
-        version: "2.2",
-        model: "meta-llama/llama-4-scout-17b-16e-instruct",
-        features: ["product-search", "supabase-integration", "ai-chat", "normalized-output"]
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+ return new Response(
+  JSON.stringify({
+    status: "online",
+    message: "Agent Miora AI Running",
+    version: "3.0",
+    mode: "general-purpose",
+    model: "meta-llama/llama-4-scout-17b-16e-instruct",
+    features: ["ai-chat", "multilingual", "general-knowledge", "no-products"]
+  }),
+  { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+);
   }
 
   if (req.method === "POST") {
@@ -220,85 +165,21 @@ serve(async (req) => {
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+// ✅ AGENT MIORA: No product search - direct to AI
+console.log('[Agent Miora] 🤖 Processing message:', message);
 
-      // PRIORITÉ 1: use explicit searchContext from client
-      if (searchContext) {
-        console.log('[Miora] 🎯 Search context from client:', searchContext);
-
-        let products = [];
-
-        if (searchContext.type === 'search' && searchContext.query) {
-          products = await searchProducts(searchContext.query, 10);
-        } else if (searchContext.type === 'free') {
-          products = await getFreeProducts(10);
-        } else if (searchContext.type === 'category' && searchContext.category) {
-          products = await getProductsByCategory(searchContext.category, 10);
-        }
-
-        if ((products || []).length > 0) {
-          const normalized = normalizeProducts(products);
-          const human = buildHumanMessage(normalized, searchContext.type || 'search');
-
-          return new Response(
-            JSON.stringify({
-              success: true,
-              message: human,
-              products: normalized,
-              model: "product-search-supabase",
-              searchType: searchContext.type,
-              addToCartEndpointHint: {
-                method: "POST",
-                url: "/api/cart", // frontend should adapt if different
-                bodyExample: { userId: userId || null, productId: "<id>", qty: 1 }
-              }
-            }),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        } else {
-          console.log('[Miora] ⚠️ No products found for client searchContext');
-          // continue to auto-detect or fallback
-        }
-      }
-
-      // PRIORITÉ 2: auto-detect from message
-      const queryDetection = detectQueryType(message);
-
-      if (queryDetection) {
-        console.log('[Miora] 🎯 Auto-detected query type:', queryDetection);
-
-        let products = [];
-
-        if (queryDetection.type === 'search' && queryDetection.query) {
-          products = await searchProducts(queryDetection.query, 10);
-        } else if (queryDetection.type === 'free') {
-          products = await getFreeProducts(10);
-        } else if (queryDetection.type === 'category' && queryDetection.category) {
-          products = await getProductsByCategory(queryDetection.category, 10);
-        }
-
-        if ((products || []).length > 0) {
-          const normalized = normalizeProducts(products);
-          const human = buildHumanMessage(normalized, queryDetection.type);
-
-          return new Response(
-            JSON.stringify({
-              success: true,
-              message: human,
-              products: normalized,
-              model: "product-search-auto",
-              searchType: queryDetection.type,
-              addToCartEndpointHint: {
-                method: "POST",
-                url: "/api/cart",
-                bodyExample: { userId: userId || null, productId: "<id>", qty: 1 }
-              }
-            }),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        } else {
-          console.log('[Miora] ⚠️ Auto-detection found no products, will fallback to AI if available');
-        }
-      }
+// Groq AI call (only option)
+if (!GROQ_API_KEY) {
+  console.warn("⚠️ GROQ_API_KEY not set");
+  return new Response(
+    JSON.stringify({
+      success: false,
+      error: "Agent Miora nécessite une clé API Groq",
+      message: "Configuration requise pour utiliser Agent Miora."
+    }),
+    { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
+}
 
       // PRIORITÉ 3: Groq AI fallback (only if key available)
       if (!GROQ_API_KEY) {
@@ -329,16 +210,39 @@ serve(async (req) => {
           body: JSON.stringify({
             model: "meta-llama/llama-4-scout-17b-16e-instruct",
             messages: [
-              {
-                role: "system",
-                content: `You are Miora, a helpful AI assistant for Mijoro Boutique. You speak Malagasy, French, and English.
-When the user asks about products, try to answer briefly. IMPORTANT: if you identify product listing intent, try to output a JSON array of products in this exact format:
+           {
+  role: "system",
+  content: `You are Agent Miora, a versatile AI assistant who helps with everything. You speak Malagasy, French, and English fluently.
 
-{"products": [{"id":"<id-or-sku>","title":"...","price":0,"is_free":true,"short_description":"...","add_to_cart_payload":{"productId":"...","qty":1}}], "message":"short human-friendly message"}
+🎯 YOUR ROLE:
+- Help with general knowledge (history, science, culture, education)
+- Marketing & Business (strategy, copywriting, branding, entrepreneurship)
+- Prompt Engineering (AI prompts, optimization, techniques)
+- Multilingual support (Malagasy, Français, English, Español)
+- Creative tasks (writing, design concepts, ideas, content creation)
+- Technical help (code, web development, apps, debugging)
+- Education & learning (explanations, tutorials, study help)
 
-If you cannot produce product data, return a simple helpful message in Malagasy or French suggesting how to search.
-`
-              },
+💬 STYLE:
+- Friendly, clear, and professional
+- Provide in-depth explanations when needed
+- Use examples to illustrate concepts
+- Adapt language to user's preference
+- Be open to all topics and questions
+
+🌐 LANGUAGE DETECTION:
+- Detect user's language automatically
+- Respond in the same language they use
+- Support code-switching if they mix languages
+
+⚠️ IMPORTANT RULES:
+- You are NOT specialized in any specific e-commerce or boutique
+- If asked about specific products or shopping, explain you're a general assistant
+- Focus on knowledge, education, and helping with tasks
+- Be helpful, accurate, and comprehensive
+
+Always respond naturally in the user's language (Malagasy, French, or English).`
+},
               { role: "user", content: message },
             ],
             temperature: 0.7,
@@ -372,33 +276,17 @@ If you cannot produce product data, return a simple helpful message in Malagasy 
         // not JSON - keep raw reply
       }
 
-      if (parsed && parsed.products) {
-        // normalize modeled products a bit (best-effort)
-        const modeled = Array.isArray(parsed.products) ? parsed.products : [];
-        const normalized = normalizeProducts(modeled);
-        const human = parsed.message || buildHumanMessage(normalized, 'ai');
-
-        return new Response(
-          JSON.stringify({
-            success: true,
-            message: human,
-            products: normalized,
-            model: "meta-llama/llama-4-scout-17b-16e-instruct",
-            searchType: "ai_fallback"
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      // fallback to raw reply
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: reply,
-          model: "meta-llama/llama-4-scout-17b-16e-instruct"
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      // ✅ AGENT MIORA: Simple response (no products)
+return new Response(
+  JSON.stringify({
+    success: true,
+    message: reply,
+    model: "meta-llama/llama-4-scout-17b-16e-instruct",
+    assistant: "agent-miora",
+    mode: "general-purpose"
+  }),
+  { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+);
 
     } catch (err) {
       console.error("❌ Server error:", err);
