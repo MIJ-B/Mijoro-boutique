@@ -89,7 +89,127 @@ document.getElementById('btnSubscribe')?.addEventListener('click', subscribeNoti
    ================================ */
 window.SUPABASE_URL = "https://zogohkfzplcuonkkfoov.supabase.co";
 window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvZ29oa2Z6cGxjdW9ua2tmb292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA4Nzk0ODAsImV4cCI6MjA3NjQ1NTQ4MH0.AeQ5pbrwjCAOsh8DA7pl33B7hLWfaiYwGa36CaeXCsw";
-window.OWNER_EMAIL = "joroandriamanirisoa13@gmail.com";
+window.OWNER_EMAIL = "joroandriamanirisoa13@gmail.com";/* ==========================================
+   WHATSAPP NUMBER - SECURE VERSION ✅
+   ========================================== */
+
+(function initWhatsAppNumber() {
+  'use strict';
+  
+  let cachedNumber = null;
+  const CACHE_KEY = 'whatsapp:number';
+  const CACHE_DURATION = 86400000; // 24 heures
+  
+  // ✅ Charger depuis cache
+  function loadFromCache() {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (!cached) return null;
+      
+      const data = JSON.parse(cached);
+      const isExpired = Date.now() - data.timestamp > CACHE_DURATION;
+      
+      if (isExpired) {
+        localStorage.removeItem(CACHE_KEY);
+        return null;
+      }
+      
+      return data.number;
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  // ✅ Sauvegarder dans cache
+  function saveToCache(number) {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        number: number,
+        timestamp: Date.now()
+      }));
+    } catch (e) {
+      console.warn('[WhatsApp] Cache save failed:', e);
+    }
+  }
+  
+  // ✅ Récupérer depuis Supabase Edge Function
+  async function fetchWhatsAppNumber() {
+    try {
+      console.log('[WhatsApp] 📞 Fetching number from Edge Function...');
+      
+      const sb = await ensureSupabase();
+      const { data: { session } } = await sb.auth.getSession();
+      
+      const response = await fetch(
+        window.SUPABASE_URL + '/functions/v1/get-whatsapp',
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': 'Bearer ' + (session?.access_token || window.SUPABASE_ANON_KEY),
+            'apikey': window.SUPABASE_ANON_KEY,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch WhatsApp number: ' + response.status);
+      }
+      
+      const data = await response.json();
+      
+      if (!data.phone) {
+        throw new Error('Invalid response format');
+      }
+      
+      console.log('[WhatsApp] ✅ Number fetched successfully');
+      
+      // Cache
+      cachedNumber = data.intl || data.phone;
+      saveToCache(cachedNumber);
+      
+      return cachedNumber;
+      
+    } catch (e) {
+      console.error('[WhatsApp] ❌ Fetch error:', e);
+      throw e;
+    }
+  }
+  
+  // ✅ API publique
+  window.getWhatsAppNumber = async function() {
+    // 1. Check cache mémoire
+    if (cachedNumber) {
+      return cachedNumber;
+    }
+    
+    // 2. Check localStorage
+    const cached = loadFromCache();
+    if (cached) {
+      console.log('[WhatsApp] ✓ Using cached number');
+      cachedNumber = cached;
+      return cachedNumber;
+    }
+    
+    // 3. Fetch depuis Edge Function
+    try {
+      return await fetchWhatsAppNumber();
+    } catch (e) {
+      // 4. Fallback (TEMPORAIRE - à supprimer après migration)
+      console.warn('[WhatsApp] Using fallback number');
+      return '';
+    }
+  };
+  
+  // ✅ Précharger au démarrage
+  window.addEventListener('load', function() {
+    getWhatsAppNumber().catch(console.error);
+  });
+  
+  console.log('[WhatsApp] ✓ Module initialized');
+  
+})();
+
 /* ================================
    SUPABASE DIAGNOSTIC TOOL
    ================================ */
@@ -421,7 +541,7 @@ async function requestNotificationPermission() {
 ;
 
 /* CONSTANTES + HELPERS */
-var WHATSAPP_PHONE_INTL = '261333106055';
+
 
 function escapeHtml(s) {
   if (s == null) return '';
@@ -489,7 +609,7 @@ function escapeAttr(s) {
 })();
 
 /* CONSTANTES + HELPERS */
-var WHATSAPP_PHONE_INTL = '261333106055';
+
 
 function escapeHtml(s) {
   if (s == null) return '';
@@ -669,16 +789,7 @@ async function saveSlides(slides) {
 
 window.slidesData = loadSlides();
 
-/* WHATSAPP HELPERS */
-function openWhatsAppMessage(text) {
-  try {
-    var msg = encodeURIComponent(text || '');
-    var wa = 'https://wa.me/' + WHATSAPP_PHONE_INTL + '?text=' + msg;
-    window.open(wa, '_blank', 'noopener');
-  } catch (err) {
-    console.error('[WA Open Error]', err);
-  }
-}
+
 
 
 
@@ -2597,28 +2708,79 @@ if (search) {
     drawer.addEventListener('mousedown', (e) => start(e.clientX));
     window.addEventListener('mousemove', (e) => move(e.clientX, e.clientY, e));
     window.addEventListener('mouseup', end);
-  })();
+  })();// ========== AMPIDIRO ETO (eo ambonin'ny checkoutBtn event listener) ==========
+// Cache WhatsApp config
+let whatsappConfig = null;
 
-  // Checkout via WhatsApp
-  checkoutBtn?.addEventListener('click', () => {
-    const { subtotal, count } = calcTotals();
-    if (!count) {
-      alert('Tsy misy entana ao anaty panier.');
-      return;
-    }
+async function getWhatsAppConfig() {
+  if (whatsappConfig) return whatsappConfig;
+  
+  try {
+    const response = await fetch(
+      `${SUPABASE_URL}/functions/v1/get-whatsapp-config`,
+      {
+        headers: {
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+      }
+    );
     
-    // Build WhatsApp message
-    let lines = ['Salama! Commande avy amin\'ny Mijoro Boutique:', ''];
+    if (!response.ok) throw new Error('Tsy afaka naka ny config');
+    
+    whatsappConfig = await response.json();
+    return whatsappConfig;
+  } catch (error) {
+    console.error('Error loading WhatsApp config:', error);
+    throw error;
+  }
+}
+// ========== HATRETO ==========
+// Checkout via WhatsApp
+checkoutBtn?.addEventListener('click', async () => { // ← JEREO: async ampiana
+  const { subtotal, count } = calcTotals();
+  if (!count) {
+    alert('Tsy misy entana ao anaty panier.');
+    return;
+  }
+  
+  try {
+    // Makà config avy amin'ny Edge Function
+    const config = await getWhatsAppConfig();
+    
+    // Build message avy amin'ny template
+    let lines = [
+      `${config.greeting}! ${config.messageTemplate.intro.replace('{businessName}', config.businessName)}:`,
+      ''
+    ];
+    
+    // Ampidiro items
     for (const it of state.items.values()) {
       const itemTotal = it.price * it.qty;
-      lines.push(`• ${it.name} x${it.qty} — ${itemTotal.toLocaleString('fr-FR')} AR`);
+      const priceText = `${itemTotal.toLocaleString('fr-FR')} AR`;
+      
+      const itemLine = config.messageTemplate.itemFormat
+        .replace('{name}', it.name)
+        .replace('{qty}', it.qty)
+        .replace('{price}', priceText);
+      
+      lines.push(itemLine);
     }
-    lines.push('', `Total: ${subtotal.toLocaleString('fr-FR')} AR`, 'Misaotra!');
+    
+    // Ampidiro total sy outro
+    lines.push(
+      '',
+      config.messageTemplate.totalFormat.replace('{total}', `${subtotal.toLocaleString('fr-FR')} AR`),
+      config.messageTemplate.outro
+    );
     
     const message = encodeURIComponent(lines.join('\n'));
-    const phone = '261333106055'; // ← Ovay raha mila
-    window.open(`https://wa.me/${phone}?text=${message}`, '_blank', 'noopener');
-  });
+    window.open(`https://wa.me/${config.phone}?text=${message}`, '_blank', 'noopener');
+    
+  } catch (error) {
+    console.error('Erreur checkout WhatsApp:', error);
+    alert('Misy olana tamin\'ny connexion. Andramo indray.');
+  }
+});
 
   // Init (minimized)
   minimizeCart();
@@ -2819,28 +2981,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.error('[Cart] Init error:', err);
   }
 });
-function checkoutWhatsApp() {
-  try {
-    if (cartItems.size === 0) {
-      openWhatsAppMessage('Salama! Te-hanao commande (panier vide).');
-      return;
-    }
-    var lines = ['Salama! Commande avy amin"ny Mijoro Boutique:', ''];
-    var total = 0;
-    cartItems.forEach(function (item) {
-      var itemPrice = (Number(item.price) || 0) * item.qty;
-      total += itemPrice;
-      // ✅ FORMAT SIMPLE
-      var priceText = itemPrice.toLocaleString('fr-FR') + ' AR';
-      lines.push('• ' + item.title + ' x' + item.qty + ' — ' + priceText);
-    });
-    var totalText = total.toLocaleString('fr-FR') + ' AR';
-    lines.push('', 'Total: ' + totalText, 'Misaotra!');
-    openWhatsAppMessage(lines.join('\n'));
-  } catch (err) {
-    console.error('[checkoutWhatsApp error]', err);
-  }
-}
+
 /* ==========================================
    RECEIPT SYSTEM - VERSION CORRIGÉE MANUEL ✅
    
@@ -3122,7 +3263,7 @@ ${receipt}
       console.log('[Receipt] 📤 Sending to WhatsApp...');
       
       const message = encodeURIComponent(receipt);
-      const phone = '261333106055'; // ← Votre numéro WhatsApp
+       // ← Votre numéro WhatsApp
       const url = `https://wa.me/${phone}?text=${message}`;
       
       // Ouvrir WhatsApp
@@ -4103,84 +4244,9 @@ function closeShop() {
 }
 window.closeShop = closeShop;
 
-/* ✅ CORRECTION: openInfo / closeInfo functions (manquaient) */
-function openInfo(type) {
-  try {
-    const modal = document.getElementById('info-modal');
-    const title = document.getElementById('info-title');
-    const content = document.getElementById('info-content');
-    if (!modal || !content || !title) return;
 
-    if (type === 'about') {
-      title.textContent = 'À propos';
-      content.innerHTML = `
-        <div style="line-height:1.6">
-          <p><strong>Mijoro Boutique</strong> – Plateforme de vente de produits numériques/physiques malagasy.</p>
-          <p>Version: 1.0 Pro</p>
-          <p>© 2025 Mijoro. Tous droits réservés.</p>
-        </div>
-      `;
-    } else if (type === 'contact') {
-      title.textContent = 'Contact';
-      content.innerHTML = `
-        <div style="line-height:1.6">
-          <p><strong>WhatsApp:</strong> <a href="https://wa.me/261333106055" target="_blank" style="color:#25d366">+261 33 31 06 055</a></p>
-          <p><strong>Email:</strong> joroandriamanirisoa13@gmail.com</p>
-          <p>Mba mifandraisa aminay raha mila fanampiana!</p>
-        </div>
-      `;
-    } else {
-      title.textContent = 'Information';
-      content.innerHTML = '<p>Aucune information disponible.</p>';
-    }
 
-    modal.classList.add('show');
-    modal.setAttribute('aria-hidden', 'false');
-    const closeBtn = modal.querySelector('.info-actions .param-btn');
-    if (closeBtn && closeBtn.focus) closeBtn.focus({ preventScroll: true });
-  } catch (err) {
-    console.error('[openInfo error]', err);
-  }
-}
-window.openInfo = openInfo;
 
-function closeInfo() {
-  try {
-    const modal = document.getElementById('info-modal');
-    if (!modal) return;
-    
-    // ✅ Stop all media FIRST
-    const content = document.getElementById('info-content');
-    if (content) {
-      const videos = content.querySelectorAll('video');
-      videos.forEach(v => {
-        try {
-          if (!v.paused) v.pause();
-          v.removeAttribute('src');
-          v.load();
-        } catch (_) {}
-      });
-      
-      // Remove all media elements
-      content.querySelectorAll('embed, iframe, video, audio').forEach(el => {
-        try {
-          el.remove();
-        } catch (_) {}
-      });
-      
-      // Clear completely
-      content.innerHTML = '';
-    }
-    
-    // Hide modal
-    modal.classList.remove('show');
-    modal.setAttribute('aria-hidden', 'true');
-    modal.style.display = 'none';
-    
-  } catch (err) {
-    console.error('[closeInfo error]', err);
-  }
-}
 window.openQuitModal = openQuitModal;
 
 function closeQuitModal() {
@@ -4502,13 +4568,15 @@ function normalizeCategory(c) {
 }
 
 /* WHATSAPP HELPERS */
-function openWhatsAppMessage(text) {
+async function openWhatsAppMessage(text) {
   try {
-    var msg = encodeURIComponent(text || '');
-    var wa = 'https://wa.me/' + WHATSAPP_PHONE_INTL + '?text=' + msg;
+    const phone = await getWhatsAppNumber();
+    const msg = encodeURIComponent(text || '');
+    const wa = 'https://wa.me/' + phone + '?text=' + msg;
     window.open(wa, '_blank', 'noopener');
   } catch (err) {
     console.error('[WA Open Error]', err);
+    alert('❌ Erreur lors de l\'ouverture de WhatsApp');
   }
 }
 function buildWAProductMessage(p, action) {
@@ -5729,34 +5797,88 @@ document.addEventListener('DOMContentLoaded', function() {
     console.error('[Cart init error]', err);
   }
 });
-function checkoutWhatsApp() {
+
+// ========== AMPIDIRO ETO (eo ambonin'ny checkoutWhatsApp) ==========
+// Cache WhatsApp config
+var whatsappConfig = null;
+
+async function getWhatsAppConfig() {
+  if (whatsappConfig) return whatsappConfig;
+  
   try {
+    var response = await fetch(
+      SUPABASE_URL + '/functions/v1/get-whatsapp-config',
+      {
+        headers: {
+          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+        },
+      }
+    );
+    
+    if (!response.ok) throw new Error('Tsy afaka naka ny config');
+    
+    whatsappConfig = await response.json();
+    return whatsappConfig;
+  } catch (error) {
+    console.error('[getWhatsAppConfig error]', error);
+    throw error;
+  }
+}
+// ========== HATRETO ==========
+async function checkoutWhatsApp() {
+  try {
+    // Makà ny config avy amin'ny Edge Function
+    var config = await getWhatsAppConfig();
+    
     if (cartItems.size === 0) {
-      openWhatsAppMessage('Salama! Te-hanao commande (panier vide).');
+      var emptyMsg = config.greeting + '! Te-hanao commande (panier vide).';
+      var emptyEncoded = encodeURIComponent(emptyMsg);
+      window.open('https://wa.me/' + config.phone + '?text=' + emptyEncoded, '_blank', 'noopener');
       return;
     }
-    var lines = ['Salama! Commande avy amin\'ny Mijoro Boutique:', ''];
+    
+    // Build message avy amin'ny template
+    var lines = [
+      config.greeting + '! ' + config.messageTemplate.intro.replace('{businessName}', config.businessName),
+      ''
+    ];
     var total = 0;
+    
     cartItems.forEach(function(item) {
       var itemPrice = (Number(item.price) || 0) * item.qty;
       total += itemPrice;
-      // ✅ TEXTE SIMPLE - Pas de HTML
+      
       var priceText = itemPrice > 0 ?
         itemPrice.toLocaleString('fr-FR') + ' AR' :
         'Gratuit';
-      lines.push('• ' + item.title + ' x' + item.qty + ' — ' + priceText);
+      
+      var itemLine = config.messageTemplate.itemFormat
+        .replace('{name}', item.title)
+        .replace('{qty}', item.qty)
+        .replace('{price}', priceText);
+      
+      lines.push(itemLine);
     });
-    // ✅ Total en texte simple
+    
     var totalText = total > 0 ?
       total.toLocaleString('fr-FR') + ' AR' :
       'Gratuit';
-    lines.push('', 'Total: ' + totalText, 'Misaotra!');
-    openWhatsAppMessage(lines.join('\n'));
+    
+    lines.push(
+      '',
+      config.messageTemplate.totalFormat.replace('{total}', totalText),
+      config.messageTemplate.outro
+    );
+    
+    var msg = encodeURIComponent(lines.join('\n'));
+    var wa = 'https://wa.me/' + config.phone + '?text=' + msg;
+    window.open(wa, '_blank', 'noopener');
+    
   } catch (err) {
     console.error('[checkoutWhatsApp error]', err);
+    alert('❌ Erreur lors de l\'envoi sur WhatsApp');
   }
 }
-
 /* Helpers (z-index/menu safety) */
 function __ensureBottomMenuClickable() {
   var bm = document.querySelector('.bottom-menu');
