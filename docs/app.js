@@ -4244,9 +4244,84 @@ function closeShop() {
 }
 window.closeShop = closeShop;
 
+/* ✅ CORRECTION: openInfo / closeInfo functions (manquaient) */
+function openInfo(type) {
+  try {
+    const modal = document.getElementById('info-modal');
+    const title = document.getElementById('info-title');
+    const content = document.getElementById('info-content');
+    if (!modal || !content || !title) return;
 
+    if (type === 'about') {
+      title.textContent = 'À propos';
+      content.innerHTML = `
+        <div style="line-height:1.6">
+          <p><strong>Mijoro Boutique</strong> – Plateforme de vente de produits numériques/physiques malagasy.</p>
+          <p>Version: 1.0 Pro</p>
+          <p>© 2025 Mijoro. Tous droits réservés.</p>
+        </div>
+      `;
+    } else if (type === 'contact') {
+      title.textContent = 'Contact';
+      content.innerHTML = `
+        <div style="line-height:1.6">
+          <p><strong>WhatsApp:</strong> <a href="https://wa.me/261333106055" target="_blank" style="color:#25d366">+261 33 31 06 055</a></p>
+          <p><strong>Email:</strong> mioraandriamiadana@gmail.com</p>
+          <p>Mba mifandraisa aminay raha mila fanampiana!</p>
+        </div>
+      `;
+    } else {
+      title.textContent = 'Information';
+      content.innerHTML = '<p>Aucune information disponible.</p>';
+    }
 
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+    const closeBtn = modal.querySelector('.info-actions .param-btn');
+    if (closeBtn && closeBtn.focus) closeBtn.focus({ preventScroll: true });
+  } catch (err) {
+    console.error('[openInfo error]', err);
+  }
+}
+window.openInfo = openInfo;
 
+function closeInfo() {
+  try {
+    const modal = document.getElementById('info-modal');
+    if (!modal) return;
+    
+    // ✅ Stop all media FIRST
+    const content = document.getElementById('info-content');
+    if (content) {
+      const videos = content.querySelectorAll('video');
+      videos.forEach(v => {
+        try {
+          if (!v.paused) v.pause();
+          v.removeAttribute('src');
+          v.load();
+        } catch (_) {}
+      });
+      
+      // Remove all media elements
+      content.querySelectorAll('embed, iframe, video, audio').forEach(el => {
+        try {
+          el.remove();
+        } catch (_) {}
+      });
+      
+      // Clear completely
+      content.innerHTML = '';
+    }
+    
+    // Hide modal
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+    modal.style.display = 'none';
+    
+  } catch (err) {
+    console.error('[closeInfo error]', err);
+  }
+}
 window.openQuitModal = openQuitModal;
 
 function closeQuitModal() {
@@ -6572,7 +6647,7 @@ function openInfo(type) {
       content.innerHTML = `
         <div style="line-height:1.6">
           <p><strong>WhatsApp:</strong> <a href="https://wa.me/261333106055" target="_blank" style="color:#25d366">+261 33 31 06 055</a></p>
-          <p><strong>Email:</strong> joroandriamanirisoa13@gmail.com</p>
+          <p><strong>Email:</strong> mioraandriamiadana@gmail.com</p>
           <p>Mba mifandraisa aminay raha mila fanampiana!</p>
         </div>
       `;
