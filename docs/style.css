@@ -6295,4 +6295,22 @@ section.active {
       transform: translateY(0);
     }
   }
+}#home-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px 10px calc(var(--bottom-menu-h, 64px) + 20px) 10px;
+  -webkit-overflow-scrolling: touch;
+}@media (max-width: 768px) {
+  #home-content {
+    padding: 10px 10px calc(var(--bottom-menu-h, 64px) + 25px) 10px;
+  }
+  
+  #products-wrapper {
+    padding: 16px 12px calc(var(--bottom-menu-h, 64px) + 25px) 12px !important;
+  }
+  
+  .agent-messages {
+    padding: 16px 12px calc(var(--bottom-menu-h, 64px) + 25px) 12px;
+  }
 }
