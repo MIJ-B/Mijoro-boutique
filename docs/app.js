@@ -9,7 +9,7 @@ window.peOpen = window.peOpen || function() {
     if (typeof window.peOpen === 'function') {
       window.peOpen.apply(this, arguments);
     } else {
-      alert('❌ Erreur: Product Modal not loaded');
+      alert('❌ Erreur: Products Modal not loaded');
     }
   }, 500);
 };
@@ -10971,60 +10971,60 @@ console.log('[peSubmitForm] ✅ Thumbnail uploaded:', thumbnail_url);
       }
     }
     
-    // Build payload
-    const payload = {
-      title,
-      category,
-      price,
-      is_free: price === 0,
-      preview_url,
-      thumbnail_url,
-      badge,
-      tags: tagsRaw ? tagsRaw.split(',').map(s => s.trim()).filter(Boolean) : [],
-      description,
-      product_type
-    };
-    
-    console.log('[peSubmitForm] 📦 Payload:', payload);
-    
-    let productId;
-    
-    // Insert or Update
-    if (window.peLocal.mode === 'add') {
-      console.log('[peSubmitForm] ➕ Inserting new product...');
-      
-      const { data: inserted, error } = await sb
-        .from('products')
-        .insert(payload)
-        .select()
-        .single();
-      
-      if (error) {
-        console.error('[peSubmitForm] ❌ Insert error:', error);
-        alert('❌ Erreur insertion: ' + error.message);
-        throw error;
-      }
-      
-      productId = inserted.id;
-      console.log('[peSubmitForm] ✅ Product inserted, ID:', productId);
-      
-    } else {
-      console.log('[peSubmitForm] 🔄 Updating product:', window.peLocal.recordId);
-      
-      const { error } = await sb
-        .from('products')
-        .update(payload)
-        .eq('id', window.peLocal.recordId);
-      
-      if (error) {
-        console.error('[peSubmitForm] ❌ Update error:', error);
-        alert('❌ Erreur modification: ' + error.message);
-        throw error;
-      }
-      
-      productId = window.peLocal.recordId;
-      console.log('[peSubmitForm] ✅ Product updated');
-    }
+   // ✅ BUILD PAYLOAD - SANS is_free
+const payload = {
+  title,
+  category,
+  price,
+  // ✅ SUPPRIMÉ: is_free (calculé automatiquement)
+  preview_url,
+  thumbnail_url,
+  badge,
+  tags: tagsRaw ? tagsRaw.split(',').map(s => s.trim()).filter(Boolean) : [],
+  description,
+  product_type
+};
+
+console.log('[peSubmitForm] 📦 Payload:', payload);
+
+let productId;
+
+// Insert or Update
+if (window.peLocal.mode === 'add') {
+  console.log('[peSubmitForm] ➕ Inserting new product...');
+  
+  const { data: inserted, error } = await sb
+    .from('products')
+    .insert(payload)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('[peSubmitForm] ❌ Insert error:', error);
+    alert('❌ Erreur insertion: ' + error.message);
+    throw error;
+  }
+  
+  productId = inserted.id;
+  console.log('[peSubmitForm] ✅ Product inserted, ID:', productId);
+  
+} else {
+  console.log('[peSubmitForm] 🔄 Updating product:', window.peLocal.recordId);
+  
+  const { error } = await sb
+    .from('products')
+    .update(payload)
+    .eq('id', window.peLocal.recordId);
+  
+  if (error) {
+    console.error('[peSubmitForm] ❌ Update error:', error);
+    alert('❌ Erreur modification: ' + error.message);
+    throw error;
+  }
+  
+  productId = window.peLocal.recordId;
+  console.log('[peSubmitForm] ✅ Product updated');
+}
     
 // ========================================
 // GALLERY UPLOAD - VERSION CORRIGÉE ✅
